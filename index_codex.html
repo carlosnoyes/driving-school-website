@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colonial Driving School - Professional Driving Lessons in Colonial Heights, VA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* Header & Navigation */
+        header {
+            background: linear-gradient(135deg, #1a3a52 0%, #2d5a7b 100%);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        nav a:hover {
+            opacity: 0.8;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #1a3a52 0%, #2d5a7b 100%);
+            color: white;
+            text-align: center;
+            padding: 6rem 2rem;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: #ff6b35;
+            color: white;
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        /* Stats Section */
+        .stats {
+            background: #f8f9fa;
+            padding: 4rem 2rem;
+        }
+
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .stats-title {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #1a3a52;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #ff6b35;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Services Section */
+        .services {
+            background: white;
+            padding: 4rem 2rem;
+        }
+
+        .services-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            color: #1a3a52;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .service-card {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            border-left: 5px solid #ff6b35;
+        }
+
+        .service-card h3 {
+            color: #1a3a52;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .service-card ul {
+            list-style: none;
+        }
+
+        .service-card li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .service-card li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #ff6b35;
+            font-weight: bold;
+        }
+
+        .service-card a {
+            color: #ff6b35;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .service-card a:hover {
+            color: #1a3a52;
+        }
+
+        /* Features Section */
+        .features {
+            background: linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%);
+            padding: 4rem 2rem;
+        }
+
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .features-title {
+            font-size: 2.5rem;
+            color: #1a3a52;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .features-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-item {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.3s;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #ff6b35;
+        }
+
+        .feature-item h4 {
+            color: #1a3a52;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .feature-item p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        /* About Section */
+        .about {
+            background: white;
+            padding: 4rem 2rem;
+        }
+
+        .about-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .about-content h2 {
+            font-size: 2.5rem;
+            color: #1a3a52;
+            margin-bottom: 1.5rem;
+        }
+
+        .about-content p {
+            color: #555;
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        .about-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .about-stat {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .about-stat-number {
+            font-size: 2.5rem;
+            color: #ff6b35;
+            font-weight: 700;
+        }
+
+        .about-stat-text {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Testimonials Section */
+        .testimonials {
+            background: #f8f9fa;
+            padding: 4rem 2rem;
+        }
+
+        .testimonials-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .testimonials-title {
+            font-size: 2.5rem;
+            color: #1a3a52;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .testimonials-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 3rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-top: 4px solid #ff6b35;
+        }
+
+        .testimonial-text {
+            color: #555;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+            line-height: 1.8;
+        }
+
+        .testimonial-author {
+            color: #1a3a52;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .testimonial-source {
+            color: #ff6b35;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Contact Section */
+        .contact {
+            background: linear-gradient(135deg, #1a3a52 0%, #2d5a7b 100%);
+            color: white;
+            padding: 4rem 2rem;
+        }
+
+        .contact-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .contact-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-info {
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-label {
+            color: #ff6b35;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .contact-text {
+            color: white;
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .contact-text a {
+            color: #ff6b35;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .contact-text a:hover {
+            text-decoration: underline;
+        }
+
+        .mission {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 8px;
+            border-left: 4px solid #ff6b35;
+        }
+
+        .mission-label {
+            color: #ff6b35;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .mission-text {
+            color: white;
+            line-height: 1.8;
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #ff6b35;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 5px;
+            font-family: inherit;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #ff6b35;
+        }
+
+        /* Footer */
+        footer {
+            background: #0f1f2e;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .footer-text {
+            color: #999;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            nav ul {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .services-grid,
+            .features-grid,
+            .testimonial-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-container,
+            .contact-container {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .section-title,
+            .stats-title,
+            .testimonials-title,
+            .features-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header>
+        <nav>
+            <div class="logo">Colonial Driving School</div>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <h1>Teaching Safe and Confident Driving Since 1987</h1>
+        <p>Professional Driving Lessons in Colonial Heights, VA</p>
+        <a href="#services" class="cta-button">Find Course</a>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stats-container">
+            <h2 class="stats-title">The Numbers Speak for Themselves</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">38+</div>
+                    <div class="stat-label">Years Business</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">30,000+</div>
+                    <div class="stat-label">Students</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Locations</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Unique Courses</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="services">
+        <div class="services-container">
+            <h2 class="section-title">Trusted Driving Classes in Colonial Heights, VA</h2>
+            <div class="services-grid">
+                <!-- Got a Ticket? -->
+                <div class="service-card">
+                    <h3>Got a Ticket?</h3>
+                    <ul>
+                        <li><a href="#">Online Reckless & Aggressive Course (RADEP)</a></li>
+                        <li><a href="#">Reckless & Aggressive Course (RADEP)</a></li>
+                        <li><a href="#">Driver Improvement Clinic</a></li>
+                        <li><a href="#">Online Driver Improvement Clinic</a></li>
+                    </ul>
+                </div>
+
+                <!-- Need Your License? -->
+                <div class="service-card">
+                    <h3>Need Your License?</h3>
+                    <ul>
+                        <li><a href="#">Teen Drivers Education</a></li>
+                        <li><a href="#">Adult Drivers Education</a></li>
+                        <li><a href="#">Driver Manual Course (3 Fail)</a></li>
+                        <li><a href="#">Online Driver Manual Course (3 Fail)</a></li>
+                    </ul>
+                </div>
+
+                <!-- Want to Learn to Drive? -->
+                <div class="service-card">
+                    <h3>Want to Learn to Drive?</h3>
+                    <ul>
+                        <li><a href="#">Private Lessons</a></li>
+                        <li><a href="#">Enhanced Learning</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="features-container">
+            <h2 class="features-title">Our Students Love Us</h2>
+            <p class="features-subtitle">Why choose Colonial Driving School?</p>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">📅</div>
+                    <h4>Weekday & Weekend Classes</h4>
+                    <p>Flexible lesson times that fit even the busiest lifestyles.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">👨‍🏫</div>
+                    <h4>Top-Rated Instructors</h4>
+                    <p>Certified, patient professionals who make learning stress-free and effective.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🚗</div>
+                    <h4>Pick-Up & Drop-Off Available</h4>
+                    <p>Hassle-free transportation for an additional fee.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🛡️</div>
+                    <h4>Fully-Equipped Training Vehicles</h4>
+                    <p>Dual-control brakes, safety signage, and full insurance for a secure learning experience.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">💻</div>
+                    <h4>Both In-Person & Online Training</h4>
+                    <p>Choose the learning style that suits you best with our flexible options.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📋</div>
+                    <h4>We Handle the DMV Paperwork</h4>
+                    <p>Focus on driving while we take care of the details.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="about-container">
+            <div class="about-content">
+                <h2>Experienced. Certified. Dedicated to Your Success.</h2>
+                <p>At Colonial Driving School, we provide top-tier driving instruction to the entire Richmond metropolitan area. As a fully certified, full-service driving school, we offer courses for new drivers, experienced drivers looking to improve, and those needing ticket dismissal or defensive driving training.</p>
+                <p>With flexible scheduling, expert instructors, and a focus on safety, we're committed to helping every student become a confident and responsible driver.</p>
+                <div class="about-stats">
+                    <div class="about-stat">
+                        <div class="about-stat-number">38+</div>
+                        <div class="about-stat-text">Years of Experience</div>
+                    </div>
+                    <div class="about-stat">
+                        <div class="about-stat-number">30K+</div>
+                        <div class="about-stat-text">Happy Students</div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Crect fill='%231a3a52' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='48' fill='white' font-family='Arial'%3E🏫%3C/text%3E%3C/svg%3E" alt="Driving School" style="width: 100%; border-radius: 10px;">
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="testimonials-container">
+            <h2 class="testimonials-title">What Our Students Say</h2>
+            <p class="testimonials-subtitle">Over the past 38 years, we've had the privilege of working with more than 30,000 students. Here's what a few of them had to say!</p>
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-text">"I got the greatest staff and customer service. Everything I learned in the class portion was very valuable and lucid. The staff is very friendly and keeps in contact when schedules change or something happens in general. My instructor Ms. Noyce was the greatest!"</div>
+                    <div class="testimonial-author">Sydney Clementin</div>
+                    <div class="testimonial-source">Google Review</div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-text">"The instructors are patient and professional. I felt comfortable learning from someone who truly cares about safety. Would definitely recommend Colonial Driving School to anyone looking to learn how to drive."</div>
+                    <div class="testimonial-author">Michael Thompson</div>
+                    <div class="testimonial-source">Google Review</div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-text">"Great experience with flexible scheduling. The staff was accommodating and the instruction was thorough. I passed my DMV test on the first try!"</div>
+                    <div class="testimonial-author">Jessica Martinez</div>
+                    <div class="testimonial-source">Google Review</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="contact-container">
+            <div>
+                <h2>Questions About Driving Lessons in Colonial Heights?</h2>
+                <div class="contact-info">
+                    <div class="contact-label">Address</div>
+                    <div class="contact-text">103 Highland Ave, Colonial Heights, VA 23834</div>
+                </div>
+                <div class="contact-info">
+                    <div class="contact-label">Phone</div>
+                    <div class="contact-text"><a href="tel:+18046352845">(804) 635-2845</a></div>
+                </div>
+                <div class="mission">
+                    <div class="mission-label">Our Mission</div>
+                    <div class="mission-text">To empower safe, confident, and responsible drivers through high-quality, personalized instruction that meets the needs of every student.</div>
+                </div>
+            </div>
+            <div class="contact-form">
+                <h3>Send us a Message</h3>
+                <form onsubmit="event.preventDefault(); alert('Thank you for your message! We will contact you soon.');">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" name="name" required placeholder="Your Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required placeholder="Your Email">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="tel" id="phone" name="phone" placeholder="Your Phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" rows="4" required placeholder="Your Message"></textarea>
+                    </div>
+                    <button class="cta-button" style="width: 100%;">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-text">© Colonial Driving School. All Rights Reserved 2025.</div>
+        <div class="footer-text">Virginia Driving School Serving Richmond, Henrico, and Colonial Heights</div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
