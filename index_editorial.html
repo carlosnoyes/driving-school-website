@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colonial Driving School | Richmond VA Driving Lessons & Driver Education</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --cream: #FAF7F2;
+            --cream-dark: #F0EBE3;
+            --sand: #E8E0D5;
+            --brown: #8B7355;
+            --brown-dark: #5C4A3A;
+            --charcoal: #2C2C2C;
+            --black: #1A1A1A;
+            --terracotta: #C67B5C;
+            --terracotta-light: #D4956F;
+            --sage: #7D8B6F;
+            --white: #FFFFFF;
+            --text-primary: #2C2C2C;
+            --text-secondary: #6B6B6B;
+            --text-muted: #9B9B9B;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            color: var(--text-primary);
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 60px;
+        }
+
+        /* Typography */
+        .serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: var(--cream);
+            transition: all 0.4s ease;
+        }
+
+        .header.scrolled {
+            box-shadow: 0 2px 40px rgba(0,0,0,0.06);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 60px;
+            border-bottom: 1px solid var(--sand);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .header-top a {
+            transition: color 0.3s;
+        }
+
+        .header-top a:hover {
+            color: var(--terracotta);
+        }
+
+        .header-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 60px;
+        }
+
+        .logo {
+            text-align: center;
+        }
+
+        .logo-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: var(--charcoal);
+        }
+
+        .logo-tagline {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .nav-left,
+        .nav-right {
+            display: flex;
+            gap: 40px;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            padding: 8px 0;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--terracotta);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--terracotta);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-dropdown {
+            position: absolute;
+            top: 100%;
+            left: -20px;
+            background: var(--white);
+            min-width: 300px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            padding: 20px 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover .nav-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .nav-dropdown a {
+            display: block;
+            padding: 12px 30px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+        }
+
+        .nav-dropdown a:hover {
+            background: var(--cream);
+            color: var(--terracotta);
+            padding-left: 35px;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--charcoal);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--terracotta);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--charcoal);
+            color: var(--charcoal);
+        }
+
+        .btn-outline:hover {
+            background: var(--charcoal);
+            color: var(--white);
+        }
+
+        .btn-terracotta {
+            background: var(--terracotta);
+            color: var(--white);
+        }
+
+        .btn-terracotta:hover {
+            background: var(--brown-dark);
+        }
+
+        .btn-large {
+            padding: 18px 48px;
+            font-size: 0.9rem;
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 10px;
+        }
+
+        .mobile-menu-btn span {
+            width: 24px;
+            height: 1.5px;
+            background: var(--charcoal);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding-top: 140px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 60px;
+        }
+
+        .hero-content {
+            padding: 40px 0;
+        }
+
+        .hero-eyebrow {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--terracotta);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .hero-eyebrow::before {
+            content: '';
+            width: 40px;
+            height: 1px;
+            background: var(--terracotta);
+        }
+
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 5vw, 4.5rem);
+            font-weight: 500;
+            line-height: 1.1;
+            color: var(--charcoal);
+            margin-bottom: 30px;
+        }
+
+        .hero-title em {
+            font-style: italic;
+            color: var(--terracotta);
+        }
+
+        .hero-description {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 480px;
+            line-height: 1.8;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .hero-visual {
+            position: relative;
+        }
+
+        .hero-image-frame {
+            position: relative;
+        }
+
+        .hero-image-frame::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 100%;
+            height: 100%;
+            border: 1px solid var(--terracotta);
+            z-index: -1;
+        }
+
+        .hero-image-frame img {
+            width: 100%;
+            height: 600px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .hero-badge {
+            position: absolute;
+            bottom: 40px;
+            left: -60px;
+            background: var(--white);
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 160px;
+        }
+
+        .hero-badge-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 600;
+            color: var(--terracotta);
+            line-height: 1;
+        }
+
+        .hero-badge-text {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* Marquee Section */
+        .marquee-section {
+            padding: 40px 0;
+            background: var(--charcoal);
+            overflow: hidden;
+        }
+
+        .marquee-track {
+            display: flex;
+            animation: marquee 30s linear infinite;
+        }
+
+        .marquee-content {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            padding-right: 60px;
+            flex-shrink: 0;
+        }
+
+        .marquee-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            white-space: nowrap;
+        }
+
+        .marquee-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--terracotta-light);
+        }
+
+        .marquee-text {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--white);
+        }
+
+        .marquee-divider {
+            width: 6px;
+            height: 6px;
+            background: var(--terracotta);
+            border-radius: 50%;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Services Section */
+        .services {
+            padding: 140px 0;
+            position: relative;
+        }
+
+        .services::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40%;
+            height: 100%;
+            background: var(--cream-dark);
+            z-index: -1;
+        }
+
+        .section-header {
+            margin-bottom: 80px;
+        }
+
+        .section-eyebrow {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--terracotta);
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 4vw, 3.5rem);
+            font-weight: 500;
+            color: var(--charcoal);
+            line-height: 1.2;
+        }
+
+        .section-title em {
+            font-style: italic;
+        }
+
+        .section-description {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-top: 20px;
+            line-height: 1.8;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+        }
+
+        .service-card {
+            padding: 50px 40px;
+            background: var(--white);
+            border: 1px solid var(--sand);
+            border-right: none;
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .service-card:last-child {
+            border-right: 1px solid var(--sand);
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--terracotta);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .service-card:hover {
+            background: var(--cream);
+        }
+
+        .service-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .service-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            color: var(--terracotta);
+            margin-bottom: 30px;
+        }
+
+        .service-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            font-weight: 500;
+            margin-bottom: 24px;
+            color: var(--charcoal);
+        }
+
+        .service-list {
+            margin-bottom: 30px;
+        }
+
+        .service-list li {
+            padding: 10px 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            border-bottom: 1px solid var(--sand);
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .service-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 8px;
+            height: 1px;
+            background: var(--terracotta);
+        }
+
+        .service-list li:last-child {
+            border-bottom: none;
+        }
+
+        .service-link {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--charcoal);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .service-link:hover {
+            color: var(--terracotta);
+            gap: 20px;
+        }
+
+        .service-link svg {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 140px 0;
+            background: var(--charcoal);
+            color: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .features::before {
+            content: 'WHY US';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Playfair Display', serif;
+            font-size: 20vw;
+            font-weight: 700;
+            color: rgba(255,255,255,0.02);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .features .section-eyebrow {
+            color: var(--terracotta-light);
+        }
+
+        .features .section-title {
+            color: var(--white);
+        }
+
+        .features .section-description {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .features-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            margin-bottom: 80px;
+            align-items: end;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+
+        .feature-card {
+            padding: 40px;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(198, 123, 92, 0.1) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--terracotta);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--terracotta-light);
+        }
+
+        .feature-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-text {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* About Section */
+        .about {
+            padding: 140px 0;
+            position: relative;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 100px;
+            align-items: center;
+        }
+
+        .about-images {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            position: relative;
+        }
+
+        .about-image-1 {
+            grid-column: 1 / 2;
+            grid-row: 1 / 3;
+        }
+
+        .about-image-2 {
+            grid-column: 2 / 3;
+            grid-row: 1 / 2;
+            margin-top: 60px;
+        }
+
+        .about-image-1 img,
+        .about-image-2 img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .about-image-1 img {
+            height: 500px;
+        }
+
+        .about-image-2 img {
+            height: 280px;
+        }
+
+        .about-experience {
+            position: absolute;
+            bottom: 40px;
+            right: 0;
+            background: var(--terracotta);
+            color: var(--white);
+            padding: 30px 40px;
+            text-align: center;
+        }
+
+        .about-experience-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .about-experience-text {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-top: 8px;
+        }
+
+        .about-content h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 3.5vw, 3rem);
+            font-weight: 500;
+            color: var(--charcoal);
+            line-height: 1.2;
+            margin-bottom: 30px;
+        }
+
+        .about-content h2 em {
+            font-style: italic;
+            color: var(--terracotta);
+        }
+
+        .about-content p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            line-height: 1.8;
+            margin-bottom: 24px;
+        }
+
+        .about-list {
+            margin: 40px 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .about-list-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .about-list-item svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--terracotta);
+            flex-shrink: 0;
+        }
+
+        /* Testimonials Section */
+        .testimonials {
+            padding: 140px 0;
+            background: var(--cream-dark);
+            position: relative;
+        }
+
+        .testimonials-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .testimonial-card {
+            background: var(--white);
+            padding: 50px 40px;
+            position: relative;
+        }
+
+        .testimonial-card::before {
+            content: '"';
+            font-family: 'Playfair Display', serif;
+            font-size: 8rem;
+            color: var(--sand);
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            line-height: 1;
+        }
+
+        .testimonial-stars {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .testimonial-stars svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--terracotta);
+        }
+
+        .testimonial-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .testimonial-avatar {
+            width: 56px;
+            height: 56px;
+            background: var(--sand);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: var(--brown-dark);
+        }
+
+        .testimonial-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--charcoal);
+        }
+
+        .testimonial-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Team Section */
+        .team {
+            padding: 140px 0;
+            position: relative;
+        }
+
+        .team-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+        }
+
+        .team-card {
+            text-align: center;
+        }
+
+        .team-image {
+            position: relative;
+            margin-bottom: 24px;
+            overflow: hidden;
+            aspect-ratio: 3/4;
+            background: var(--sand);
+        }
+
+        .team-image::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 50%, rgba(44, 44, 44, 0.8) 100%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .team-card:hover .team-image::before {
+            opacity: 1;
+        }
+
+        .team-image svg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            fill: var(--brown);
+        }
+
+        .team-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--charcoal);
+            margin-bottom: 4px;
+        }
+
+        .team-role {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Locations Section */
+        .locations {
+            padding: 100px 0;
+            background: var(--charcoal);
+        }
+
+        .locations-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 60px;
+        }
+
+        .locations-left {
+            flex: 1;
+        }
+
+        .locations-left .section-eyebrow {
+            color: var(--terracotta-light);
+        }
+
+        .locations-left .section-title {
+            color: var(--white);
+            font-size: 2.5rem;
+        }
+
+        .locations-grid {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .location-item {
+            padding: 16px 32px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: var(--white);
+            cursor: pointer;
+            transition: all 0.4s ease;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+        }
+
+        .location-item:hover {
+            background: var(--terracotta);
+            border-color: var(--terracotta);
+        }
+
+        /* Contact Section */
+        .contact {
+            padding: 140px 0;
+            position: relative;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 100px;
+        }
+
+        .contact-info h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 3.5vw, 3rem);
+            font-weight: 500;
+            color: var(--charcoal);
+            margin-bottom: 24px;
+            line-height: 1.2;
+        }
+
+        .contact-info h2 em {
+            font-style: italic;
+            color: var(--terracotta);
+        }
+
+        .contact-info > p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            line-height: 1.8;
+            margin-bottom: 40px;
+        }
+
+        .contact-details {
+            margin-bottom: 40px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--sand);
+            transition: padding-left 0.3s;
+        }
+
+        .contact-item:hover {
+            padding-left: 10px;
+        }
+
+        .contact-item-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--cream-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .contact-item-icon svg {
+            width: 22px;
+            height: 22px;
+            stroke: var(--terracotta);
+        }
+
+        .contact-item span {
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .contact-form {
+            background: var(--white);
+            padding: 60px;
+            border: 1px solid var(--sand);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 16px 20px;
+            background: var(--cream);
+            border: 1px solid var(--sand);
+            font-size: 1rem;
+            font-family: inherit;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--terracotta);
+            background: var(--white);
+        }
+
+        .form-group select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236B6B6B' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+        }
+
+        .form-group textarea {
+            min-height: 140px;
+            resize: vertical;
+        }
+
+        .form-btn {
+            width: 100%;
+            padding: 18px;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--black);
+            color: var(--white);
+            padding: 80px 0 40px;
+        }
+
+        .footer-main {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 60px;
+            padding-bottom: 60px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .footer-brand .logo-text {
+            color: var(--white);
+            font-size: 1.5rem;
+        }
+
+        .footer-brand p {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.95rem;
+            line-height: 1.8;
+            margin: 20px 0 30px;
+            max-width: 300px;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 12px;
+        }
+
+        .footer-social a {
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .footer-social a:hover {
+            background: var(--terracotta);
+            border-color: var(--terracotta);
+        }
+
+        .footer-social svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--white);
+        }
+
+        .footer-column h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 14px;
+        }
+
+        .footer-column ul a {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .footer-column ul a:hover {
+            color: var(--terracotta-light);
+        }
+
+        .footer-bottom {
+            padding-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-bottom p {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1200px) {
+            .container {
+                padding: 0 40px;
+            }
+
+            .header-main,
+            .header-top {
+                padding-left: 40px;
+                padding-right: 40px;
+            }
+
+            .hero-container {
+                padding: 0 40px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .nav-left,
+            .nav-right {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .header-main {
+                justify-content: space-between;
+            }
+
+            .logo {
+                margin: 0;
+            }
+
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-eyebrow {
+                justify-content: center;
+            }
+
+            .hero-eyebrow::before {
+                display: none;
+            }
+
+            .hero-description {
+                margin: 0 auto 40px;
+            }
+
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .hero-badge {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .services::before {
+                display: none;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .service-card {
+                border-right: 1px solid var(--sand);
+                border-bottom: none;
+            }
+
+            .service-card:last-child {
+                border-bottom: 1px solid var(--sand);
+            }
+
+            .features-header {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .about-grid,
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-images {
+                max-width: 500px;
+                margin: 0 auto;
+            }
+
+            .testimonials-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .team-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .locations-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-main {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 24px;
+            }
+
+            .header-top {
+                display: none;
+            }
+
+            .header-main {
+                padding: 16px 24px;
+            }
+
+            .hero {
+                padding-top: 100px;
+            }
+
+            .hero-container {
+                padding: 0 24px;
+            }
+
+            .hero-image-frame::before {
+                display: none;
+            }
+
+            .features-grid,
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-list {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-form {
+                padding: 40px 30px;
+            }
+
+            .locations-grid {
+                justify-content: center;
+            }
+
+            .footer-main {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+            }
+
+            .about-images {
+                grid-template-columns: 1fr;
+            }
+
+            .about-image-2 {
+                margin-top: 0;
+            }
+
+            .about-experience {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="header-top">
+            <div>Virginia Driving School Serving Richmond, Henrico, and Colonial Heights</div>
+            <div>
+                <a href="tel:8045262197">Call: (804) 526-2197</a>
+                <span style="margin: 0 16px;">|</span>
+                <a href="sms:8043957007">Text: (804) 395-7007</a>
+            </div>
+        </div>
+        <div class="header-main">
+            <nav class="nav-left">
+                <div class="nav-item">
+                    <a href="#" class="nav-link">Got a Ticket?</a>
+                    <div class="nav-dropdown">
+                        <a href="#">Online 12 Hour Reckless & Aggressive Course (RADEP)</a>
+                        <a href="#">12 Hour Reckless & Aggressive Course (RADEP)</a>
+                        <a href="#">8 Hour Driver Improvement Clinic</a>
+                        <a href="#">8 Hour Online Driver Improvement Clinic</a>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link">Need a License?</a>
+                    <div class="nav-dropdown">
+                        <a href="#">Teen Drivers Education</a>
+                        <a href="#">Adult Drivers Education</a>
+                        <a href="#">Driver Manual Course (3 Fail)</a>
+                        <a href="#">Online Driver Manual Course (3 Fail)</a>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link">Learn to Drive</a>
+                    <div class="nav-dropdown">
+                        <a href="#">Private Lessons</a>
+                        <a href="#">Enhanced Learning</a>
+                    </div>
+                </div>
+            </nav>
+            <a href="#" class="logo">
+                <div class="logo-text">Colonial Driving School</div>
+                <div class="logo-tagline">Est. 1987</div>
+            </a>
+            <nav class="nav-right">
+                <div class="nav-item">
+                    <a href="#" class="nav-link">About</a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link">Locations</a>
+                    <div class="nav-dropdown">
+                        <a href="#">Colonial Heights</a>
+                        <a href="#">Midlothian</a>
+                        <a href="#">Richmond</a>
+                        <a href="#">Henrico</a>
+                        <a href="#">Glen Allen</a>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link">Espanol</a>
+                </div>
+            </nav>
+            <div class="mobile-menu-btn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-eyebrow">Trusted Since 1987</div>
+                <h1 class="hero-title">Teaching <em>Safe</em> and <em>Confident</em> Driving</h1>
+                <p class="hero-description">Expert driving instruction for teens, adults, and those needing ticket dismissal courses. Join over 30,000 satisfied students across the Richmond metropolitan area.</p>
+                <div class="hero-actions">
+                    <a href="#courses" class="btn btn-primary btn-large">Find Your Course</a>
+                    <a href="#contact" class="btn btn-outline btn-large">Contact Us</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-image-frame">
+                    <img src="https://cdn.prod.website-files.com/67cef03e328382c60961a0d1/67f92960160b789bf0e2d928_60c3717d9727a98abb8210cd_drivers-education-course--1024x682%20(3)-min.jpeg" alt="Student learning to drive">
+                </div>
+                <div class="hero-badge">
+                    <div class="hero-badge-number">38+</div>
+                    <div class="hero-badge-text">Years Experience</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Marquee Section -->
+    <section class="marquee-section">
+        <div class="marquee-track">
+            <div class="marquee-content">
+                <div class="marquee-item">
+                    <span class="marquee-number">38+</span>
+                    <span class="marquee-text">Years in Business</span>
+                </div>
+                <div class="marquee-divider"></div>
+                <div class="marquee-item">
+                    <span class="marquee-number">30,000+</span>
+                    <span class="marquee-text">Students Trained</span>
+                </div>
+                <div class="marquee-divider"></div>
+                <div class="marquee-item">
+                    <span class="marquee-number">5</span>
+                    <span class="marquee-text">Convenient Locations</span>
+                </div>
+                <div class="marquee-divider"></div>
+                <div class="marquee-item">
+                    <span class="marquee-number">12</span>
+                    <span class="marquee-text">Unique Courses</span>
+                </div>
+                <div class="marquee-divider"></div>
+            </div>
+            <div class="marquee-content">
+                <div class="marquee-item">
+                    <span class="marquee-number">38+</span>
+                    <span class="marquee-text">Years in Business</span>
+                </div>
+                <div class="marquee-divider"></div>
+                <div class="marquee-item">
+                    <span class="marquee-number">30,000+</span>
+                    <span class="marquee-text">Students Trained</span>
+                </div>
+                <div class="marquee-divider"></div>
+                <div class="marquee-item">
+                    <span class="marquee-number">5</span>
+                    <span class="marquee-text">Convenient Locations</span>
+                </div>
+                <div class="marquee-divider"></div>
+                <div class="marquee-item">
+                    <span class="marquee-number">12</span>
+                    <span class="marquee-text">Unique Courses</span>
+                </div>
+                <div class="marquee-divider"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="courses">
+        <div class="container">
+            <div class="section-header fade-in">
+                <div class="section-eyebrow">Our Services</div>
+                <h2 class="section-title">Choose Your Path to <em>Safe Driving</em></h2>
+                <p class="section-description">Whether you need a license, want to improve your skills, or received a ticket, we have the right course for you.</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card fade-in">
+                    <div class="service-number">01</div>
+                    <h3 class="service-title">Got a Ticket?</h3>
+                    <ul class="service-list">
+                        <li>Online Reckless & Aggressive Course (RADEP)</li>
+                        <li>Reckless & Aggressive Course (RADEP)</li>
+                        <li>Driver Improvement Clinic</li>
+                        <li>Online Driver Improvement Clinic</li>
+                    </ul>
+                    <a href="#" class="service-link">
+                        Explore Options
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14m-7-7l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="service-card fade-in">
+                    <div class="service-number">02</div>
+                    <h3 class="service-title">Need Your License?</h3>
+                    <ul class="service-list">
+                        <li>Teen Drivers Education</li>
+                        <li>Adult Drivers Education</li>
+                        <li>Driver Manual Course (3 Fail)</li>
+                        <li>Online Driver Manual Course (3 Fail)</li>
+                    </ul>
+                    <a href="#" class="service-link">
+                        Explore Options
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14m-7-7l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="service-card fade-in">
+                    <div class="service-number">03</div>
+                    <h3 class="service-title">Want to Learn?</h3>
+                    <ul class="service-list">
+                        <li>Private Lessons</li>
+                        <li>Enhanced Learning</li>
+                        <li>Personalized Instruction</li>
+                        <li>Flexible Scheduling</li>
+                    </ul>
+                    <a href="#" class="service-link">
+                        Explore Options
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14m-7-7l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="features-header">
+                <div class="fade-in">
+                    <div class="section-eyebrow">Why Choose Us</div>
+                    <h2 class="section-title">Why Choose Colonial <em>Driving School</em></h2>
+                </div>
+                <p class="section-description fade-in">We're committed to providing the highest quality driving education with flexible options to fit your schedule and learning style.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Weekday & Weekend Classes</h3>
+                    <p class="feature-text">Flexible lesson times that fit even the busiest lifestyles.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Top-Rated Instructors</h3>
+                    <p class="feature-text">Certified, patient professionals who make learning stress-free and effective.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Pick-Up & Drop-Off</h3>
+                    <p class="feature-text">Hassle-free transportation for an additional fee.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Fully-Equipped Vehicles</h3>
+                    <p class="feature-text">Dual-control brakes, safety signage, and full insurance for a secure learning experience.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">In-Person & Online</h3>
+                    <p class="feature-text">Choose the learning style that suits you best with our flexible training options.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">We Handle DMV Paperwork</h3>
+                    <p class="feature-text">Focus on driving while we take care of the details.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-images fade-in">
+                    <div class="about-image-1">
+                        <img src="https://cdn.prod.website-files.com/67cef03e328382c60961a0d1/67cff4fedea523c4220aabdb_about-img.jpg" alt="Driving instructor teaching student">
+                    </div>
+                    <div class="about-image-2">
+                        <img src="https://cdn.prod.website-files.com/67cef03e328382c60961a0d1/67f92960160b789bf0e2d928_60c3717d9727a98abb8210cd_drivers-education-course--1024x682%20(3)-min.jpeg" alt="Driving lessons">
+                    </div>
+                    <div class="about-experience">
+                        <div class="about-experience-number">38+</div>
+                        <div class="about-experience-text">Years Experience</div>
+                    </div>
+                </div>
+                <div class="about-content fade-in">
+                    <div class="section-eyebrow">About Us</div>
+                    <h2>Experienced. Certified. <em>Dedicated to Your Success.</em></h2>
+                    <p>At Colonial Driving School, we provide top-tier driving instruction to the entire Richmond metropolitan area. As a fully certified, full-service driving school, we offer courses for new drivers, experienced drivers looking to improve, and those needing ticket dismissal or defensive driving training.</p>
+                    <p>With flexible scheduling, expert instructors, and a focus on safety, we're committed to helping every student become a confident and responsible driver.</p>
+                    <div class="about-list">
+                        <div class="about-list-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>DMV Certified</span>
+                        </div>
+                        <div class="about-list-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>Flexible Scheduling</span>
+                        </div>
+                        <div class="about-list-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>Expert Instructors</span>
+                        </div>
+                        <div class="about-list-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>Safety Focused</span>
+                        </div>
+                    </div>
+                    <a href="#" class="btn btn-primary">Learn More About Us</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="container">
+            <div class="testimonials-header fade-in">
+                <div class="section-eyebrow">Testimonials</div>
+                <h2 class="section-title">What Our <em>Students</em> Say</h2>
+                <p class="section-description" style="margin: 20px auto 0;">Over the past 38 years, we've had the privilege of working with more than 30,000 students. Here's what a few of them had to say!</p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card fade-in">
+                    <div class="testimonial-stars">
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    </div>
+                    <p class="testimonial-text">"The best school ever!!! I took a 3 fail learners course. My teacher was Daryl which is the best!! He made the class fun and interesting. I took the class on 03/9/19 and my test today on 03/12/19. And I passed my learners test. I was so excited I cried!!!"</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">BF</div>
+                        <div>
+                            <div class="testimonial-name">Brittany Ford</div>
+                            <div class="testimonial-source">Google Review</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card fade-in">
+                    <div class="testimonial-stars">
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    </div>
+                    <p class="testimonial-text">"I would highly recommend this driving school to anyone! My instructor Mari was the sweetest, she helped me receive my license smoothly and efficiently with great tips to help me out in the future as well."</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">KH</div>
+                        <div>
+                            <div class="testimonial-name">Kit Haefner</div>
+                            <div class="testimonial-source">Google Review</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card fade-in">
+                    <div class="testimonial-stars">
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    </div>
+                    <p class="testimonial-text">"I got the greatest staff/customer service. Everything I learned in the class portion was very valuable and lucid. The staff is very friendly and keeps in contact when schedules change. My instructor Ms. Noyce was the greatest!"</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">SC</div>
+                        <div>
+                            <div class="testimonial-name">Sydney Clementin</div>
+                            <div class="testimonial-source">Google Review</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="team">
+        <div class="container">
+            <div class="team-header fade-in">
+                <div class="section-eyebrow">Our Team</div>
+                <h2 class="section-title">Meet Our <em>Instructors</em></h2>
+                <p class="section-description" style="margin: 20px auto 0;">Our instructors are patient, knowledgeable, and certified professionals who tailor lessons to each student's needs.</p>
+            </div>
+            <div class="team-grid">
+                <div class="team-card fade-in">
+                    <div class="team-image">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                    <h4 class="team-name">Charles</h4>
+                    <p class="team-role">In-vehicle Instructor</p>
+                </div>
+                <div class="team-card fade-in">
+                    <div class="team-image">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                    <h4 class="team-name">Erica Rivera</h4>
+                    <p class="team-role">Office Assistant</p>
+                </div>
+                <div class="team-card fade-in">
+                    <div class="team-image">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                    <h4 class="team-name">Lorena Betancourt</h4>
+                    <p class="team-role">Director of Business Development</p>
+                </div>
+                <div class="team-card fade-in">
+                    <div class="team-image">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                    <h4 class="team-name">Laurie Halder</h4>
+                    <p class="team-role">In-vehicle Instructor</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Locations Section -->
+    <section class="locations">
+        <div class="container">
+            <div class="locations-content">
+                <div class="locations-left fade-in">
+                    <div class="section-eyebrow">Our Locations</div>
+                    <h2 class="section-title">Find a Location <em>Near You</em></h2>
+                </div>
+                <div class="locations-grid fade-in">
+                    <div class="location-item">Colonial Heights</div>
+                    <div class="location-item">Midlothian</div>
+                    <div class="location-item">Richmond</div>
+                    <div class="location-item">Henrico</div>
+                    <div class="location-item">Glen Allen</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <div class="contact-grid">
+                <div class="contact-info fade-in">
+                    <div class="section-eyebrow">Contact Us</div>
+                    <h2>Questions About <em>Driving Lessons?</em></h2>
+                    <p>Whether you're a new driver looking to get your license, need to dismiss a ticket, or want to improve your driving skills, we're here to help. Contact us today to learn more about our courses and pricing.</p>
+                    <div class="contact-details">
+                        <div class="contact-item">
+                            <div class="contact-item-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                            <span>103 Highland Ave, Colonial Heights, VA 23834</span>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-item-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                </svg>
+                            </div>
+                            <span>(804) 526-2197</span>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-item-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                            </div>
+                            <span>Text Us: (804) 395-7007</span>
+                        </div>
+                    </div>
+                    <a href="tel:8045262197" class="btn btn-terracotta btn-large">Call Now</a>
+                </div>
+                <div class="contact-form fade-in">
+                    <form>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Full Name</label>
+                                <input type="text" id="name" name="name" placeholder="Enter your name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" name="phone" placeholder="Enter your phone">
+                            </div>
+                            <div class="form-group">
+                                <label for="service">Service Interested In</label>
+                                <select id="service" name="service">
+                                    <option value="">Select a service</option>
+                                    <option value="teen-drivers-ed">Teen Drivers Education</option>
+                                    <option value="adult-drivers-ed">Adult Drivers Education</option>
+                                    <option value="private-lessons">Private Lessons</option>
+                                    <option value="driver-improvement">Driver Improvement Clinic</option>
+                                    <option value="radep">Reckless & Aggressive Course (RADEP)</option>
+                                    <option value="3-fail">Driver Manual Course (3 Fail)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" name="message" placeholder="How can we help you?"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary form-btn">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-main">
+                <div class="footer-brand">
+                    <div class="logo-text serif">Colonial Driving School</div>
+                    <p>Teaching Safe and Confident Driving Since 1987. Richmond Driving School Serving Henrico, Midlothian, Glen Allen & Colonial Heights.</p>
+                    <div class="footer-social">
+                        <a href="#">
+                            <svg viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                        </a>
+                        <a href="#">
+                            <svg viewBox="0 0 24 24"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/></svg>
+                        </a>
+                        <a href="#">
+                            <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h4>Courses</h4>
+                    <ul>
+                        <li><a href="#">Teen Drivers Education</a></li>
+                        <li><a href="#">Adult Drivers Education</a></li>
+                        <li><a href="#">Private Lessons</a></li>
+                        <li><a href="#">Driver Improvement</a></li>
+                        <li><a href="#">RADEP Course</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Locations</h4>
+                    <ul>
+                        <li><a href="#">Colonial Heights</a></li>
+                        <li><a href="#">Midlothian</a></li>
+                        <li><a href="#">Richmond</a></li>
+                        <li><a href="#">Henrico</a></li>
+                        <li><a href="#">Glen Allen</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="tel:8045262197">(804) 526-2197</a></li>
+                        <li><a href="tel:8046269584">(804) 626-9584</a></li>
+                        <li><a href="sms:8043957007">Text: (804) 395-7007</a></li>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Espanol</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Colonial Driving School. All Rights Reserved 2025.</p>
+                <p>Teaching Safe and Confident Driving Since 1987.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Header scroll effect
+        const header = document.getElementById('header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Scroll animations
+        const fadeElements = document.querySelectorAll('.fade-in');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        fadeElements.forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
