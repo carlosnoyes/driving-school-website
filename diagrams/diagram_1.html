@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Driving Diagram 1</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #2a2a2a;
+    }
+  </style>
+</head>
+<body>
+
+<div id="diagram"></div>
+
+<script src="js/core.js"></script>
+<script src="js/roads.js"></script>
+<script src="js/intersections.js"></script>
+<script src="js/vehicles.js"></script>
+<script src="js/signals.js"></script>
+<script src="js/terrain.js"></script>
+<script src="js/renderer.js"></script>
+<script>
+
+// ==========================================
+// LAYOUT CONFIG
+// ==========================================
+const CONFIG = {
+  canvasWidth: 816,
+  canvasHeight: 1056,
+  laneWidth: 50,
+  verticalLaneWidth: 75,
+  verticalLanesPerDirection: 1,
+  horizontalLanesPerDirection: 2,
+  intersectionType: 'fourWay',
+  centerX: 0,
+  centerY: 0,
+};
+
+// ==========================================
+// CAR PLACEMENTS
+// ==========================================
+// t: 0 = diagram edge, 1.0 = intersection edge (max 0.75)
+const CARS = [
+  // NORTH arm (1 lane each direction)
+  { road: 'vertical', side: 'right', lane: 0, arm: 'north', t: 0.42 },
+  { road: 'vertical', side: 'left',  lane: 0, arm: 'north', t: 0.18 },
+
+  // SOUTH arm (1 lane each direction)
+  { road: 'vertical', side: 'right', lane: 0, arm: 'south', t: 0.55 },
+  { road: 'vertical', side: 'left',  lane: 0, arm: 'south', t: 0.31 },
+
+  // WEST arm (2 lanes each direction)
+  { road: 'horizontal', side: 'left',  lane: 0, arm: 'west', t: 0.60 },
+  { road: 'horizontal', side: 'left',  lane: 1, arm: 'west', t: 0.23 },
+  { road: 'horizontal', side: 'right', lane: 0, arm: 'west', t: 0.45 },
+  { road: 'horizontal', side: 'right', lane: 1, arm: 'west', t: 0.70 },
+
+  // EAST arm (2 lanes each direction)
+  { road: 'horizontal', side: 'left',  lane: 0, arm: 'east', t: 0.37 },
+  { road: 'horizontal', side: 'left',  lane: 1, arm: 'east', t: 0.52 },
+  { road: 'horizontal', side: 'right', lane: 0, arm: 'east', t: 0.14 },
+  { road: 'horizontal', side: 'right', lane: 1, arm: 'east', t: 0.68 },
+];
+
+// ==========================================
+// RENDER
+// ==========================================
+const container = document.getElementById('diagram');
+Renderer.render(container, CONFIG, CARS);
+Renderer.addExportButton(container, 'diagram_1.png');
+
+</script>
+</body>
+</html>

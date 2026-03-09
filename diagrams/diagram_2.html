@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Driving Diagram 2 - Parking Lot</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #2a2a2a;
+    }
+  </style>
+</head>
+<body>
+
+<div id="diagram"></div>
+
+<script src="js/core.js"></script>
+<script src="js/roads.js"></script>
+<script src="js/intersections.js"></script>
+<script src="js/vehicles.js"></script>
+<script src="js/signals.js"></script>
+<script src="js/terrain.js"></script>
+<script src="js/parking.js"></script>
+<script src="js/renderer.js"></script>
+<script>
+
+// ==========================================
+// PARKING LOT DIAGRAM
+// ==========================================
+const W = 816;
+const H = 1056;
+
+const svg = DiagramCore.createSVG(document.getElementById('diagram'), W, H);
+
+// --- Layout constants ---
+const streetWidth = 100;    // 2 lanes (1 each direction)
+const streetX = 30;         // left margin for street
+const streetCenter = streetX + streetWidth / 2;
+
+const lotGap = 20;  // gap between street and lot
+const lotLeft = streetX + streetWidth + lotGap;
+const lotTop = 60;
+const lotRight = W - 40;
+const lotBottom = H - 60;
+const lotWidth = lotRight - lotLeft;
+const lotHeight = lotBottom - lotTop;
+
+// --- Parking stall layout (compute first so entrance can align to aisles) ---
+const stallW = 38;
+const stallD = 45;
+const doubleRowH = stallD * 2;
+
+// How many stalls fit across the lot width, minus 2 on each end for driving margin
+const stallMargin = 2; // empty stalls worth of space on each side
+const totalStalls = Math.floor((lotWidth - 20) / stallW);
+const stallsPerRow = totalStalls - stallMargin * 2;
+const rowStartX = lotLeft + (lotWidth - totalStalls * stallW) / 2 + stallMargin * stallW;
+
+// Layout: 4 double rows + 1 single (half) row at bottom, equally spaced
+const numDoubleRows = 4;
+const numSingleRows = 1;
+const totalStallHeight = numDoubleRows * doubleRowH + numSingleRows * stallD;
+// Single row flush with bottom
+const singleRowY = lotBottom - stallD;
+// Equal aisle spacing for everything above: top aisle, between double rows, aisle before single row
+const numAisles = numDoubleRows + 1; // top + between each double row
+const usedByDoubleRows = numDoubleRows * doubleRowH;
+const spaceForAisles = singleRowY - lotTop - usedByDoubleRows;
+const aisleH = spaceForAisles / numAisles;
+
+// Compute double row positions
+const rows = [];
+let curY = lotTop + aisleH;
+for (let i = 0; i < numDoubleRows; i++) {
+  rows.push(curY);
+  curY += doubleRowH + aisleH;
+}
+
+// --- Entrance centered in the aisle between 2nd and 3rd double rows ---
+const aisleBetween2and3Top = rows[1] + doubleRowH;  // bottom of row 1
+const aisleBetween2and3Bottom = rows[2];             // top of row 2
+const entranceY = (aisleBetween2and3Top + aisleBetween2and3Bottom) / 2;
+const entranceLaneW = streetWidth / 2;
+const entranceHalfW = entranceLaneW;
+const entranceTop = entranceY - entranceHalfW;
+const entranceBottom = entranceY + entranceHalfW;
+
+// --- Top-right exit ---
+const exitWidth = entranceBottom - entranceTop;
+const exitLeft = lotRight - exitWidth - 40;
+const exitRight = exitLeft + exitWidth;
+
+// --- Grass areas ---
+// Top strip — split around exit
+Terrain.fillArea(svg, 0, 0, exitLeft, lotTop);
+Terrain.fillArea(svg, exitRight, 0, W - exitRight, lotTop);
+// Bottom strip
+Terrain.fillArea(svg, 0, lotBottom, W, H - lotBottom);
+// Left of street
+Terrain.fillArea(svg, 0, lotTop, streetX, lotHeight);
+// Between street and lot — split into above and below entrance
+const gapLeft = streetX + streetWidth;
+const gapWidth = lotLeft - gapLeft;
+Terrain.fillArea(svg, gapLeft, lotTop, gapWidth, entranceTop - lotTop);
+Terrain.fillArea(svg, gapLeft, entranceBottom, gapWidth, lotBottom - entranceBottom);
+// Right of lot
+Terrain.fillArea(svg, lotRight, lotTop, W - lotRight, lotHeight);
+
+// --- Street (vertical, left side) ---
+Roads.verticalRoad(svg, streetCenter, 0, H, {
+  laneWidth: streetWidth / 2,
+  lanesPerDirection: 1,
+});
+
+// --- Entrance connector (plain gray rectangle from street to lot) ---
+DiagramCore.rect(svg, gapLeft, entranceTop, gapWidth, entranceBottom - entranceTop, {
+  fill: Parking.DEFAULTS.surfaceColor,
+});
+
+// --- Top-right exit connector (plain gray rectangle from lot to top edge) ---
+DiagramCore.rect(svg, exitLeft, 0, exitWidth, lotTop, {
+  fill: Parking.DEFAULTS.surfaceColor,
+});
+
+// --- Parking lot surface ---
+Parking.surface(svg, lotLeft, lotTop, lotWidth, lotHeight);
+
+// Draw double rows
+rows.forEach((ry) => {
+  Parking.doubleRow(svg, rowStartX, ry, stallsPerRow, {
+    stallWidth: stallW,
+    stallDepth: stallD,
+  });
+});
+
+// Draw single (half) row at bottom — back wall at bottom, open toward aisle above
+Parking.stallRow(svg, rowStartX, singleRowY, stallsPerRow, {
+  stallWidth: stallW,
+  stallDepth: stallD,
+  direction: 'down',
+});
+
+// --- Cars in the lot (scattered in some stalls) ---
+// Double row cars: { row, side, stall }
+const doubleRowCars = [
+  { row: 0, side: 'top', stall: 1 },
+  { row: 0, side: 'top', stall: 5 },
+  { row: 0, side: 'bottom', stall: 3 },
+  { row: 0, side: 'bottom', stall: 8 },
+  { row: 1, side: 'top', stall: 0 },
+  { row: 1, side: 'top', stall: 4 },
+  { row: 1, side: 'bottom', stall: 2 },
+  { row: 1, side: 'bottom', stall: 7 },
+  { row: 2, side: 'top', stall: 3 },
+  { row: 2, side: 'top', stall: 9 },
+  { row: 2, side: 'bottom', stall: 1 },
+  { row: 2, side: 'bottom', stall: 6 },
+  { row: 3, side: 'top', stall: 2 },
+  { row: 3, side: 'top', stall: 7 },
+  { row: 3, side: 'bottom', stall: 5 },
+  { row: 3, side: 'bottom', stall: 9 },
+];
+
+doubleRowCars.forEach(cp => {
+  if (cp.row >= rows.length) return;
+  if (cp.stall >= stallsPerRow) return;
+  const ry = rows[cp.row];
+  const cx = rowStartX + cp.stall * stallW + stallW / 2;
+  const cy = cp.side === 'top' ? ry + stallD / 2 : ry + stallD + stallD / 2;
+  Vehicles.car(svg, cx, cy, { direction: 'north', width: 22, height: 36 });
+});
+
+// Single row cars (bottom half row)
+const singleRowCars = [1, 4, 8];
+singleRowCars.forEach(s => {
+  if (s >= stallsPerRow) return;
+  const cx = rowStartX + s * stallW + stallW / 2;
+  const cy = singleRowY + stallD / 2;
+  Vehicles.car(svg, cx, cy, { direction: 'north', width: 22, height: 36 });
+});
+
+// --- Cars on the street ---
+// One car heading south (right lane)
+Vehicles.car(svg, streetCenter + streetWidth / 4, 300, { direction: 'south', width: 22, height: 36 });
+// One car heading north (left lane)
+Vehicles.car(svg, streetCenter - streetWidth / 4, 650, { direction: 'north', width: 22, height: 36 });
+
+// --- Export button ---
+Renderer.addExportButton(document.getElementById('diagram'), 'diagram_2.png');
+
+</script>
+</body>
+</html>
