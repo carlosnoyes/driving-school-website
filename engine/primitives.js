@@ -359,6 +359,7 @@ const Intersections = (() => {
     const curbColor = opts.curbColor || '#ccc';
     const curbWidth = opts.curbWidth || 3;
     const sh = opts.shoulder || 0;
+    const noCurb = opts.noCurb || {};
     const g = SVG.group(p);
 
     const left  = cx - halfH;
@@ -397,11 +398,11 @@ const Intersections = (() => {
       _shoulderArc(g, left, bot, -1, 1, arms.south, arms.west, r, sh, '#fff', slw);
     }
 
-    // Straight curb lines on blocked sides only
-    if (!arms.north) SVG.line(g, left, top, right, top, { stroke: curbColor, 'stroke-width': curbWidth });
-    if (!arms.south) SVG.line(g, left, bot, right, bot, { stroke: curbColor, 'stroke-width': curbWidth });
-    if (!arms.west)  SVG.line(g, left, top, left, bot, { stroke: curbColor, 'stroke-width': curbWidth });
-    if (!arms.east)  SVG.line(g, right, top, right, bot, { stroke: curbColor, 'stroke-width': curbWidth });
+    // Straight curb lines on blocked sides only (skip if noCurb)
+    if (!arms.north && !noCurb.north) SVG.line(g, left, top, right, top, { stroke: curbColor, 'stroke-width': curbWidth });
+    if (!arms.south && !noCurb.south) SVG.line(g, left, bot, right, bot, { stroke: curbColor, 'stroke-width': curbWidth });
+    if (!arms.west  && !noCurb.west)  SVG.line(g, left, top, left, bot, { stroke: curbColor, 'stroke-width': curbWidth });
+    if (!arms.east  && !noCurb.east)  SVG.line(g, right, top, right, bot, { stroke: curbColor, 'stroke-width': curbWidth });
 
     return g;
   }

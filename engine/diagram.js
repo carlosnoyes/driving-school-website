@@ -156,6 +156,87 @@ const Diagram = (() => {
       }
     });
 
+    // 6b. Entrances (road-to-parking-lot junctions with rounded corners)
+    (cfg.entrances || []).forEach(ent => {
+      const road = roadMap[ent.road];
+      if (!road) return;
+      const roadHalf = Roads.roadWidth(road.laneWidth, road.lanesPerDirection, road.median, road.shoulder) / 2;
+      const entHalf = ent.halfWidth || 50;
+      const ecx = ent.center[0], ecy = ent.center[1];
+
+      // Only cover the entrance side of the road (not the opposite side)
+      // Shift center so the junction box spans from road center to road edge + entrance
+      const side = ent.side;
+      const oppositeSide = { north: 'south', south: 'north', east: 'west', west: 'east' }[side];
+      const arms = { north: false, south: false, east: false, west: false };
+      const noCurb = {};
+
+      let halfH, halfW, jcx, jcy;
+      const overlap = 5; // extend past road center to fully mask center line
+      if (road.orientation === 'vertical') {
+        // Entrance opens east or west from a vertical road
+        const entranceSideSign = (side === 'east') ? 1 : -1;
+        // Box spans from (center - overlap) to (center + roadHalf) on entrance side
+        halfH = (roadHalf + overlap) / 2;
+        jcx = road.center + entranceSideSign * (roadHalf - overlap) / 2;
+        jcy = ecy;
+        halfW = entHalf;
+        arms.north = true;
+        arms.south = true;
+        arms[side] = true;
+        noCurb[oppositeSide] = true;
+      } else {
+        const entranceSideSign = (side === 'south') ? 1 : -1;
+        jcx = ecx;
+        halfW = (roadHalf + overlap) / 2;
+        jcy = road.center + entranceSideSign * (roadHalf - overlap) / 2;
+        halfH = entHalf;
+        arms.east = true;
+        arms.west = true;
+        arms[side] = true;
+        noCurb[oppositeSide] = true;
+      }
+
+      const sh = ent.shoulder ?? (road.shoulder ?? -1);
+      Intersections.junction(svg, jcx, jcy, halfH, halfW, {
+        radius: ent.radius ?? 15,
+        arms,
+        noCurb,
+        roadColor: ent.roadColor,
+        curbColor: ent.curbColor,
+        curbWidth: ent.curbWidth,
+        shoulder: sh,
+      });
+
+      // Mask parking lot border at the entrance opening
+      // Find the nearest parking lot edge on the entrance side
+      const lotColor = Parking.D.surfaceColor;
+      if (road.orientation === 'vertical') {
+        // Find parking lot whose edge is near the road
+        const lots = cfg.parkingLots || [];
+        for (const lot of lots) {
+          const lotLeft = lot.x;
+          const lotRight = lot.x + lot.width;
+          if (side === 'east' && Math.abs(lotLeft - (road.center + roadHalf)) < 30) {
+            SVG.rect(svg, lotLeft - 1, ecy - entHalf, 3, entHalf * 2, { fill: lotColor });
+          } else if (side === 'west' && Math.abs(lotRight - (road.center - roadHalf)) < 30) {
+            SVG.rect(svg, lotRight - 1, ecy - entHalf, 3, entHalf * 2, { fill: lotColor });
+          }
+        }
+      } else {
+        const lots = cfg.parkingLots || [];
+        for (const lot of lots) {
+          const lotTop = lot.y;
+          const lotBot = lot.y + lot.height;
+          if (side === 'south' && Math.abs(lotTop - (road.center + roadHalf)) < 30) {
+            SVG.rect(svg, ecx - entHalf, lotTop - 1, entHalf * 2, 3, { fill: lotColor });
+          } else if (side === 'north' && Math.abs(lotBot - (road.center - roadHalf)) < 30) {
+            SVG.rect(svg, ecx - entHalf, lotBot - 1, entHalf * 2, 3, { fill: lotColor });
+          }
+        }
+      }
+    });
+
     // 7. Signals
     (cfg.signals || []).forEach(s => {
       if (s.type === 'stopSign') Signals.stopSign(svg, s.x, s.y, s);
