@@ -11,9 +11,10 @@
       "from": 0,
       "to": 1056,
       "laneWidth": 50,
-      "lanesPerDirection": 1,
-      "laneLine": "none",
-      "centerLineStyle": "dashed-yellow"
+      "lanesPerDirection": 2,
+      "laneLine": "dashed",
+      "median": 12,
+      "shoulder": 10
     },
     {
       "id": "horizontal",
@@ -22,9 +23,10 @@
       "from": 0,
       "to": 816,
       "laneWidth": 50,
-      "lanesPerDirection": 2,
-      "laneLine": "dashed",
-      "centerLineStyle": "dashed-yellow"
+      "lanesPerDirection": 1,
+      "laneLine": "none",
+      "centerLineStyle": "double-yellow",
+      "shoulder": 10
     }
   ],
 
@@ -32,23 +34,22 @@
     {
       "type": "fourWay",
       "center": [408, 528],
-      "roads": ["vertical", "horizontal"]
+      "roads": ["vertical", "horizontal"],
+      "radius": 25
     }
   ],
 
   "vehicles": [
     { "road": "vertical", "side": "right", "lane": 0, "arm": "north", "t": 0.42 },
-    { "road": "vertical", "side": "left",  "lane": 0, "arm": "north", "t": 0.18 },
+    { "road": "vertical", "side": "right", "lane": 1, "arm": "north", "t": 0.18 },
+    { "road": "vertical", "side": "left",  "lane": 0, "arm": "north", "t": 0.30 },
+    { "road": "vertical", "side": "left",  "lane": 1, "arm": "north", "t": 0.55 },
     { "road": "vertical", "side": "right", "lane": 0, "arm": "south", "t": 0.55 },
     { "road": "vertical", "side": "left",  "lane": 0, "arm": "south", "t": 0.31 },
-    { "road": "horizontal", "side": "left",  "lane": 0, "arm": "west", "t": 0.60 },
-    { "road": "horizontal", "side": "left",  "lane": 1, "arm": "west", "t": 0.23 },
-    { "road": "horizontal", "side": "right", "lane": 0, "arm": "west", "t": 0.45 },
-    { "road": "horizontal", "side": "right", "lane": 1, "arm": "west", "t": 0.70 },
+    { "road": "horizontal", "side": "left",  "lane": 0, "arm": "west", "t": 0.45 },
+    { "road": "horizontal", "side": "right", "lane": 0, "arm": "west", "t": 0.60 },
     { "road": "horizontal", "side": "left",  "lane": 0, "arm": "east", "t": 0.37 },
-    { "road": "horizontal", "side": "left",  "lane": 1, "arm": "east", "t": 0.52 },
-    { "road": "horizontal", "side": "right", "lane": 0, "arm": "east", "t": 0.14 },
-    { "road": "horizontal", "side": "right", "lane": 1, "arm": "east", "t": 0.68 }
+    { "road": "horizontal", "side": "right", "lane": 0, "arm": "east", "t": 0.65 }
   ],
 
   "signals": [],
