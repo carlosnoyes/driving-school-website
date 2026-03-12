@@ -21,7 +21,7 @@
       "center": 480,
       "from": 0,
       "to": 816,
-      "laneWidth": 45,
+      "laneWidth": 50,
       "lanesPerDirection": 2,
       "laneLine": "dashed",
       "centerLineStyle": "dashed-yellow"

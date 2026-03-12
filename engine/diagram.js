@@ -98,8 +98,8 @@ const Diagram = (() => {
       if (r0 && r1) {
         const vRoad = r0.orientation === 'vertical' ? r0 : r1;
         const hRoad = r0.orientation === 'horizontal' ? r0 : r1;
-        halfH = Roads.roadWidth(vRoad.laneWidth, vRoad.lanesPerDirection) / 2;
-        halfW = Roads.roadWidth(hRoad.laneWidth, hRoad.lanesPerDirection) / 2;
+        halfH = Roads.roadWidth(vRoad.laneWidth, vRoad.lanesPerDirection, vRoad.median, vRoad.shoulder) / 2;
+        halfW = Roads.roadWidth(hRoad.laneWidth, hRoad.lanesPerDirection, hRoad.median, hRoad.shoulder) / 2;
       }
       return { ...ix, cx, cy, halfH, halfW };
     });
@@ -135,6 +135,24 @@ const Diagram = (() => {
         Intersections.fourWay(svg, ix.cx, ix.cy, ix.halfW, ix.halfH);
       } else if (ix.type === 'tJunction') {
         Intersections.tJunction(svg, ix.cx, ix.cy, ix.blockedSide, ix.halfW, ix.halfH);
+      }
+
+      // Junction overlay with rounded corners (if radius is specified)
+      if (ix.radius != null) {
+        const arms = { north: true, south: true, east: true, west: true };
+        if (ix.blockedSide) arms[ix.blockedSide] = false;
+        if (ix.blockedSides) ix.blockedSides.forEach(s => { arms[s] = false; });
+        const jr0 = roadMap[ix.roads?.[0]];
+        const jr1 = roadMap[ix.roads?.[1]];
+        const jSh = Math.max(jr0?.shoulder ?? -1, jr1?.shoulder ?? -1);
+        Intersections.junction(svg, ix.cx, ix.cy, ix.halfH, ix.halfW, {
+          radius: ix.radius,
+          arms,
+          roadColor: ix.roadColor,
+          curbColor: ix.curbColor,
+          curbWidth: ix.curbWidth,
+          shoulder: jSh,
+        });
       }
     });
 
@@ -198,6 +216,9 @@ const Diagram = (() => {
       laneLine: r.laneLine,
       centerLineStyle: r.centerLineStyle,
       roadColor: r.roadColor,
+      median: r.median,
+      medianColor: r.medianColor,
+      shoulder: r.shoulder,
     };
     if (r.orientation === 'vertical') {
       Roads.verticalRoad(svg, r.center, r.from, r.to, opts);

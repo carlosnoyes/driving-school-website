@@ -10,7 +10,7 @@
       "center": 408,
       "from": 0,
       "to": 1056,
-      "laneWidth": 60,
+      "laneWidth": 50,
       "lanesPerDirection": 1,
       "laneLine": "none",
       "centerLineStyle": "dashed-yellow"

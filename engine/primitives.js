@@ -155,31 +155,96 @@ const Roads = (() => {
   }
 
   /**
+   * Draw a median strip (raised/painted divider replacing center line).
+   * @param {Element} g - parent group
+   * @param {number} medianWidth - width in px (0 = no median)
+   * @param {string} medianColor - fill color
+   * Coordinates depend on orientation, so caller passes the right rect args.
+   */
+  function medianRect(g, x, y, w, h, color) {
+    SVG.rect(g, x, y, w, h, { fill: color });
+  }
+
+  /**
+   * Draw shoulders on a road segment.
+   * A shoulder is: solid white edge line, then a strip of road-colored pavement.
+   * If shoulder size is 0, only the solid white edge line is drawn.
+   */
+  function drawShoulders(g, orientation, edgePositions, start, end, shoulderWidth, roadColor) {
+    // edgePositions: [leftOrTop, rightOrBottom] — the outer edges of the travel lanes
+    const [e1, e2] = edgePositions;
+    if (orientation === 'vertical') {
+      // e1 = left edge x, e2 = right edge x
+      // Left shoulder: from (e1 - shoulderWidth) to e1
+      if (shoulderWidth > 0) {
+        SVG.rect(g, e1 - shoulderWidth, Math.min(start, end), shoulderWidth, Math.abs(end - start), { fill: roadColor });
+      }
+      solidLine(g, e1, start, e1, end, { color: '#fff', width: D.laneLineWidth });
+      // Right shoulder: from e2 to (e2 + shoulderWidth)
+      if (shoulderWidth > 0) {
+        SVG.rect(g, e2, Math.min(start, end), shoulderWidth, Math.abs(end - start), { fill: roadColor });
+      }
+      solidLine(g, e2, start, e2, end, { color: '#fff', width: D.laneLineWidth });
+    } else {
+      // e1 = top edge y, e2 = bottom edge y
+      if (shoulderWidth > 0) {
+        SVG.rect(g, Math.min(start, end), e1 - shoulderWidth, Math.abs(end - start), shoulderWidth, { fill: roadColor });
+      }
+      solidLine(g, start, e1, end, e1, { color: '#fff', width: D.laneLineWidth });
+      if (shoulderWidth > 0) {
+        SVG.rect(g, Math.min(start, end), e2, Math.abs(end - start), shoulderWidth, { fill: roadColor });
+      }
+      solidLine(g, start, e2, end, e2, { color: '#fff', width: D.laneLineWidth });
+    }
+  }
+
+  /**
    * Draw a vertical road.
-   * @param {Element} p - parent SVG/group
-   * @param {number} cx - center x
-   * @param {number} y1 - start y
-   * @param {number} y2 - end y
-   * @param {object} opts - { laneWidth, lanesPerDirection, laneLine, centerLineStyle, roadColor }
+   * Layout (left to right): [shoulder | lanes | median-or-centerLine | lanes | shoulder]
+   *
+   * @param {object} opts
+   *   laneWidth, lanesPerDirection, laneLine, centerLineStyle, roadColor,
+   *   median: number (px width, 0=none),  medianColor: string,
+   *   shoulder: number (px width, 0=edge-line-only)
    */
   function verticalRoad(p, cx, y1, y2, opts = {}) {
     const lw = opts.laneWidth || D.laneWidth;
     const lpd = opts.lanesPerDirection || 1;
-    const totalW = lw * lpd * 2;
+    const med = opts.median || 0;
+    const sh = opts.shoulder ?? -1;   // -1 means no shoulder at all
+    const rc = opts.roadColor || D.roadColor;
+    const lanesW = lw * lpd;         // width of lanes on one side
+    const totalW = lanesW * 2 + med + (sh > 0 ? sh * 2 : 0);
     const left = cx - totalW / 2;
     const g = SVG.group(p);
+    const yMin = Math.min(y1, y2), yLen = Math.abs(y2 - y1);
 
-    SVG.rect(g, left, Math.min(y1, y2), totalW, Math.abs(y2 - y1), { fill: opts.roadColor || D.roadColor });
+    // Road surface (full width including shoulders)
+    SVG.rect(g, left, yMin, totalW, yLen, { fill: rc });
 
-    // Center line
-    centerLine(g, cx, y1, cx, y2, opts.centerLineStyle || 'dashed-yellow');
+    // Shoulder positions
+    const lanesLeftEdge = left + (sh > 0 ? sh : 0);
+    const lanesRightEdge = left + totalW - (sh > 0 ? sh : 0);
+
+    // Shoulders
+    if (sh >= 0) {
+      drawShoulders(g, 'vertical', [lanesLeftEdge, lanesRightEdge], y1, y2, sh > 0 ? sh : 0, rc);
+    }
+
+    // Center: median or center line
+    if (med > 0) {
+      const medX = cx - med / 2;
+      medianRect(g, medX, yMin, med, yLen, opts.medianColor || '#5a5a5a');
+    } else {
+      centerLine(g, cx, y1, cx, y2, opts.centerLineStyle || 'dashed-yellow');
+    }
 
     // Lane dividers
     const ll = opts.laneLine ?? 'dashed';
     if (ll !== 'none') {
       for (let i = 1; i < lpd; i++) {
-        const lx = left + i * lw;
-        const rx = cx + i * lw;
+        const lx = lanesLeftEdge + i * lw;
+        const rx = cx + med / 2 + i * lw;
         if (ll === 'solid') {
           solidLine(g, lx, y1, lx, y2, { color: '#fff', width: D.laneLineWidth });
           solidLine(g, rx, y1, rx, y2, { color: '#fff', width: D.laneLineWidth });
@@ -195,21 +260,36 @@ const Roads = (() => {
   function horizontalRoad(p, cy, x1, x2, opts = {}) {
     const lw = opts.laneWidth || D.laneWidth;
     const lpd = opts.lanesPerDirection || 1;
-    const totalW = lw * lpd * 2;
+    const med = opts.median || 0;
+    const sh = opts.shoulder ?? -1;
+    const rc = opts.roadColor || D.roadColor;
+    const lanesW = lw * lpd;
+    const totalW = lanesW * 2 + med + (sh > 0 ? sh * 2 : 0);
     const top = cy - totalW / 2;
     const g = SVG.group(p);
+    const xMin = Math.min(x1, x2), xLen = Math.abs(x2 - x1);
 
-    SVG.rect(g, Math.min(x1, x2), top, Math.abs(x2 - x1), totalW, { fill: opts.roadColor || D.roadColor });
+    SVG.rect(g, xMin, top, xLen, totalW, { fill: rc });
 
-    // Center line
-    centerLine(g, x1, cy, x2, cy, opts.centerLineStyle || 'dashed-yellow');
+    const lanesTopEdge = top + (sh > 0 ? sh : 0);
+    const lanesBottomEdge = top + totalW - (sh > 0 ? sh : 0);
 
-    // Lane dividers
+    if (sh >= 0) {
+      drawShoulders(g, 'horizontal', [lanesTopEdge, lanesBottomEdge], x1, x2, sh > 0 ? sh : 0, rc);
+    }
+
+    if (med > 0) {
+      const medY = cy - med / 2;
+      medianRect(g, xMin, medY, xLen, med, opts.medianColor || '#5a5a5a');
+    } else {
+      centerLine(g, x1, cy, x2, cy, opts.centerLineStyle || 'dashed-yellow');
+    }
+
     const ll = opts.laneLine ?? 'dashed';
     if (ll !== 'none') {
       for (let i = 1; i < lpd; i++) {
-        const ty = top + i * lw;
-        const by = cy + i * lw;
+        const ty = lanesTopEdge + i * lw;
+        const by = cy + med / 2 + i * lw;
         if (ll === 'solid') {
           solidLine(g, x1, ty, x2, ty, { color: '#fff', width: D.laneLineWidth });
           solidLine(g, x1, by, x2, by, { color: '#fff', width: D.laneLineWidth });
@@ -223,10 +303,14 @@ const Roads = (() => {
   }
 
   /**
-   * Compute the total road width from params.
+   * Compute the total road width from params (including median and shoulders).
    */
-  function roadWidth(laneWidth, lanesPerDirection) {
-    return (laneWidth || D.laneWidth) * (lanesPerDirection || 1) * 2;
+  function roadWidth(laneWidth, lanesPerDirection, median, shoulder) {
+    const lw = laneWidth || D.laneWidth;
+    const lpd = lanesPerDirection || 1;
+    const med = median || 0;
+    const sh = (shoulder != null && shoulder >= 0) ? shoulder : 0;
+    return lw * lpd * 2 + med + (sh > 0 ? sh * 2 : 0);
   }
 
   return { D, dashedLine, solidLine, centerLine, verticalRoad, horizontalRoad, roadWidth };
@@ -260,7 +344,99 @@ const Intersections = (() => {
     return g;
   }
 
-  return { fourWay, tJunction };
+  /**
+   * Junction overlay with rounded curb corners.
+   * Draws on top of intersection + roads to smooth the corners.
+   *
+   * @param {number} halfH - half-width of vertical road (horizontal extent)
+   * @param {number} halfW - half-width of horizontal road (vertical extent)
+   * @param {object} opts - radius, arms, roadColor, curbColor, curbWidth
+   */
+  function junction(p, cx, cy, halfH, halfW, opts = {}) {
+    const r = opts.radius ?? 20;
+    const rc = opts.roadColor || Roads.D.roadColor;
+    const arms = opts.arms || { north: true, south: true, east: true, west: true };
+    const curbColor = opts.curbColor || '#ccc';
+    const curbWidth = opts.curbWidth || 3;
+    const sh = opts.shoulder || 0;
+    const g = SVG.group(p);
+
+    const left  = cx - halfH;
+    const right = cx + halfH;
+    const top   = cy - halfW;
+    const bot   = cy + halfW;
+
+    // Fill intersection box (masks lines through intersection)
+    SVG.rect(g, left, top, halfH * 2, halfW * 2, { fill: rc });
+
+    // Arm extensions — mask road markings up to the radius point
+    if (arms.north) SVG.rect(g, left, top - r, halfH * 2, r, { fill: rc });
+    if (arms.south) SVG.rect(g, left, bot, halfH * 2, r, { fill: rc });
+    if (arms.west)  SVG.rect(g, left - r, top, r, halfW * 2, { fill: rc });
+    if (arms.east)  SVG.rect(g, right, top, r, halfW * 2, { fill: rc });
+
+    // Corner carving — fill r×r square, carve quarter circle with grass
+    const grassColor = Terrain.C.grass;
+    _corner(g, left, top, -1, -1, arms.north, arms.west, r, rc, grassColor);
+    _corner(g, right, top, 1, -1, arms.north, arms.east, r, rc, grassColor);
+    _corner(g, right, bot, 1, 1, arms.south, arms.east, r, rc, grassColor);
+    _corner(g, left, bot, -1, 1, arms.south, arms.west, r, rc, grassColor);
+
+    // Curved shoulder white lines through the junction corners
+    if (sh >= 0) {
+      // The shoulder white line is at the inner edge of the shoulder:
+      //   vertical road: at left + sh and right - sh (i.e. halfH - sh from center)
+      //   horizontal road: at top + sh and bot - sh (i.e. halfW - sh from center)
+      // At each corner, the white line curves from the vertical position to the horizontal.
+      // Arc center = corner point. Radius = distance from corner to the white line = sh
+      // (since the white line is sh pixels inward from the outer edge which IS the corner)
+      const slw = Roads.D.laneLineWidth;
+      _shoulderArc(g, left, top, -1, -1, arms.north, arms.west, r, sh, '#fff', slw);
+      _shoulderArc(g, right, top, 1, -1, arms.north, arms.east, r, sh, '#fff', slw);
+      _shoulderArc(g, right, bot, 1, 1, arms.south, arms.east, r, sh, '#fff', slw);
+      _shoulderArc(g, left, bot, -1, 1, arms.south, arms.west, r, sh, '#fff', slw);
+    }
+
+    // Straight curb lines on blocked sides only
+    if (!arms.north) SVG.line(g, left, top, right, top, { stroke: curbColor, 'stroke-width': curbWidth });
+    if (!arms.south) SVG.line(g, left, bot, right, bot, { stroke: curbColor, 'stroke-width': curbWidth });
+    if (!arms.west)  SVG.line(g, left, top, left, bot, { stroke: curbColor, 'stroke-width': curbWidth });
+    if (!arms.east)  SVG.line(g, right, top, right, bot, { stroke: curbColor, 'stroke-width': curbWidth });
+
+    return g;
+  }
+
+  /**
+   * Draw a curved shoulder white line at a corner.
+   * The shoulder line is `sh` pixels inward from the outer road edge.
+   * Arc radius = r + sh (curb radius + shoulder inset).
+   */
+  function _shoulderArc(g, ex, ey, dx, dy, armA, armB, r, sh, color, width) {
+    if (!armA || !armB) return;
+    if (sh <= 0) return;
+    const arcR = r + sh;
+    // Arc endpoints: sh pixels inward from road edge, r pixels away from intersection edge
+    const ax1 = ex - dx * sh, ay1 = ey + dy * r;
+    const ax2 = ex + dx * r, ay2 = ey - dy * sh;
+    const sweep = (dx * dy > 0) ? 1 : 0;
+    SVG.path(g, `M ${ax1} ${ay1} A ${arcR} ${arcR} 0 0 ${sweep} ${ax2} ${ay2}`, { fill: 'none', stroke: color, 'stroke-width': width });
+  }
+
+  function _corner(g, ex, ey, dx, dy, armA, armB, r, roadColor, bgColor) {
+    if (!armA || !armB) return;
+    const sx = dx < 0 ? ex - r : ex;
+    const sy = dy < 0 ? ey - r : ey;
+    SVG.rect(g, sx, sy, r, r, { fill: roadColor });
+
+    const ax1 = ex + dx * r, ay1 = ey;
+    const ax2 = ex, ay2 = ey + dy * r;
+    const sweep = (dx * dy > 0) ? 0 : 1;
+    const cornerX = ex + dx * r, cornerY = ey + dy * r;
+    SVG.path(g, `M ${cornerX} ${cornerY} L ${ax1} ${ay1} A ${r} ${r} 0 0 ${sweep} ${ax2} ${ay2} L ${cornerX} ${cornerY} Z`, { fill: bgColor });
+  }
+
+
+  return { fourWay, tJunction, junction };
 })();
 
 
