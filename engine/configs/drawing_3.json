@@ -1,0 +1,58 @@
+{
+  "title": "Large 4-Way Intersection with Traffic Lights",
+  "canvas": { "width": 816, "height": 1056 },
+  "background": "grass",
+
+  "roads": [
+    {
+      "id": "vertical",
+      "orientation": "vertical",
+      "center": 408,
+      "from": 0,
+      "to": 1056,
+      "laneWidth": 50,
+      "lanesPerDirection": 2,
+      "laneLine": "dashed",
+      "centerLineStyle": "dashed-yellow"
+    },
+    {
+      "id": "horizontal",
+      "orientation": "horizontal",
+      "center": 480,
+      "from": 0,
+      "to": 816,
+      "laneWidth": 45,
+      "lanesPerDirection": 2,
+      "laneLine": "dashed",
+      "centerLineStyle": "dashed-yellow"
+    }
+  ],
+
+  "intersections": [
+    {
+      "type": "fourWay",
+      "center": [408, 480],
+      "roads": ["vertical", "horizontal"]
+    }
+  ],
+
+  "vehicles": [],
+
+  "signals": [
+    { "type": "trafficLight", "x": 340, "y": 395, "direction": "south", "activeLight": "red" },
+    { "type": "trafficLight", "x": 365, "y": 395, "direction": "south", "activeLight": "red" },
+
+    { "type": "trafficLight", "x": 450, "y": 565, "direction": "north", "activeLight": "red" },
+    { "type": "trafficLight", "x": 475, "y": 565, "direction": "north", "activeLight": "red" },
+
+    { "type": "trafficLight", "x": 325, "y": 445, "direction": "east", "activeLight": "red" },
+    { "type": "trafficLight", "x": 325, "y": 470, "direction": "east", "activeLight": "red" },
+
+    { "type": "trafficLight", "x": 490, "y": 490, "direction": "west", "activeLight": "red" },
+    { "type": "trafficLight", "x": 490, "y": 515, "direction": "west", "activeLight": "red" }
+  ],
+
+  "decorations": [
+    { "type": "compass", "x": 700, "y": 900, "size": 35 }
+  ]
+}

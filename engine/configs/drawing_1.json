@@ -1,0 +1,47 @@
+{
+  "title": "4-Way Intersection with 2 Stop Signs (Uncontrolled Cross)",
+  "canvas": { "width": 816, "height": 1056 },
+  "background": "grass",
+
+  "roads": [
+    {
+      "id": "vertical",
+      "orientation": "vertical",
+      "center": 408,
+      "from": 0,
+      "to": 1056,
+      "laneWidth": 60,
+      "lanesPerDirection": 1,
+      "laneLine": "none",
+      "centerLineStyle": "dashed-yellow"
+    },
+    {
+      "id": "horizontal",
+      "orientation": "horizontal",
+      "center": 528,
+      "from": 0,
+      "to": 816,
+      "laneWidth": 50,
+      "lanesPerDirection": 1,
+      "laneLine": "none",
+      "centerLineStyle": "none"
+    }
+  ],
+
+  "intersections": [
+    {
+      "type": "fourWay",
+      "center": [408, 528],
+      "roads": ["vertical", "horizontal"]
+    }
+  ],
+
+  "vehicles": [],
+
+  "signals": [
+    { "type": "stopSign", "x": 475, "y": 475, "scale": 1.2 },
+    { "type": "stopSign", "x": 340, "y": 585, "scale": 1.2 }
+  ],
+
+  "decorations": []
+}

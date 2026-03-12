@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CDS Diagram Viewer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    /* ── Top bar ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 20px;
+      background: #16213e;
+      border-bottom: 1px solid #333;
+      flex-wrap: wrap;
+    }
+    .toolbar h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-right: 16px;
+      white-space: nowrap;
+    }
+    .toolbar select, .toolbar button, .toolbar input[type="file"] {
+      padding: 6px 12px;
+      font-size: 13px;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background: #0f3460;
+      color: #e0e0e0;
+      cursor: pointer;
+    }
+    .toolbar select:hover, .toolbar button:hover {
+      background: #1a4a7a;
+    }
+    .toolbar .spacer { flex: 1; }
+    .toolbar .title-label {
+      font-size: 14px;
+      color: #aaa;
+    }
+
+    /* ── Canvas area ── */
+    .canvas-area {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 30px;
+      min-height: calc(100vh - 50px);
+      overflow: auto;
+    }
+    #diagram {
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      background: #fff;
+    }
+    #diagram svg {
+      display: block;
+    }
+
+    /* ── JSON editor panel ── */
+    .json-panel {
+      position: fixed;
+      top: 50px;
+      right: 0;
+      width: 420px;
+      height: calc(100vh - 50px);
+      background: #0d1b2a;
+      border-left: 1px solid #333;
+      display: none;
+      flex-direction: column;
+      z-index: 10;
+    }
+    .json-panel.open { display: flex; }
+    .json-panel header {
+      padding: 10px 14px;
+      background: #16213e;
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .json-panel header button {
+      padding: 4px 10px;
+      font-size: 12px;
+      border: 1px solid #444;
+      border-radius: 3px;
+      background: #0f3460;
+      color: #e0e0e0;
+      cursor: pointer;
+    }
+    #json-editor {
+      flex: 1;
+      width: 100%;
+      padding: 12px;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      background: #0d1b2a;
+      color: #8ecae6;
+      border: none;
+      resize: none;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="toolbar">
+  <h1>CDS Diagrams</h1>
+  <select id="preset-select">
+    <option value="">-- Select a diagram --</option>
+    <optgroup label="Replicated Diagrams">
+      <option value="configs/diagram_0.json">Diagram 0 — Empty Intersection</option>
+      <option value="configs/diagram_1.json">Diagram 1 — Intersection + Vehicles</option>
+      <option value="configs/diagram_2.json">Diagram 2 — Parking Lot</option>
+    </optgroup>
+    <optgroup label="From Drawings">
+      <option value="configs/drawing_1.json">Drawing 1 — 2 Stop Signs</option>
+      <option value="configs/drawing_2.json">Drawing 2 — Street Parking</option>
+      <option value="configs/drawing_3.json">Drawing 3 — Traffic Lights</option>
+      <option value="configs/drawing_4.json">Drawing 4 — Stop Signs + Compass</option>
+    </optgroup>
+  </select>
+  <button id="btn-load-file">Load JSON File…</button>
+  <input type="file" id="file-input" accept=".json" style="display:none">
+  <div class="spacer"></div>
+  <span class="title-label" id="diagram-title"></span>
+  <button id="btn-json">Edit JSON</button>
+  <button id="btn-export">Export PNG</button>
+</div>
+
+<div class="canvas-area">
+  <div id="diagram"></div>
+</div>
+
+<div class="json-panel" id="json-panel">
+  <header>
+    <span>Diagram JSON</span>
+    <div>
+      <button id="btn-apply">Apply</button>
+      <button id="btn-close-json">Close</button>
+    </div>
+  </header>
+  <textarea id="json-editor" spellcheck="false"></textarea>
+</div>
+
+<script src="primitives.js"></script>
+<script src="diagram.js"></script>
+<script>
+(function () {
+  const container = document.getElementById('diagram');
+  const presetSelect = document.getElementById('preset-select');
+  const titleLabel = document.getElementById('diagram-title');
+  const jsonPanel = document.getElementById('json-panel');
+  const jsonEditor = document.getElementById('json-editor');
+  const fileInput = document.getElementById('file-input');
+
+  let currentConfig = null;
+
+  // ── Render ──
+  function renderDiagram(cfg) {
+    currentConfig = cfg;
+    container.innerHTML = '';
+    Diagram.render(container, cfg);
+    titleLabel.textContent = cfg.title || '';
+    jsonEditor.value = JSON.stringify(cfg, null, 2);
+  }
+
+  // ── Preset select ──
+  presetSelect.addEventListener('change', async () => {
+    const val = presetSelect.value;
+    if (!val) return;
+    try {
+      const res = await fetch(val);
+      const cfg = await res.json();
+      renderDiagram(cfg);
+    } catch (e) {
+      alert('Failed to load: ' + e.message);
+    }
+  });
+
+  // ── File load ──
+  document.getElementById('btn-load-file').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const cfg = JSON.parse(reader.result);
+        renderDiagram(cfg);
+        presetSelect.value = '';
+      } catch (e) {
+        alert('Invalid JSON: ' + e.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // ── JSON editor ──
+  document.getElementById('btn-json').addEventListener('click', () => {
+    jsonPanel.classList.toggle('open');
+  });
+  document.getElementById('btn-close-json').addEventListener('click', () => {
+    jsonPanel.classList.remove('open');
+  });
+  document.getElementById('btn-apply').addEventListener('click', () => {
+    try {
+      const cfg = JSON.parse(jsonEditor.value);
+      renderDiagram(cfg);
+    } catch (e) {
+      alert('Invalid JSON: ' + e.message);
+    }
+  });
+
+  // ── Export PNG ──
+  document.getElementById('btn-export').addEventListener('click', () => {
+    const svgEl = container.querySelector('svg');
+    if (!svgEl) return;
+    const data = new XMLSerializer().serializeToString(svgEl);
+    const blob = new Blob([data], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = +svgEl.getAttribute('width');
+      canvas.height = +svgEl.getAttribute('height');
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      const a = document.createElement('a');
+      a.download = (currentConfig?.title || 'diagram').replace(/\s+/g, '_') + '.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    };
+    img.src = url;
+  });
+
+  // ── Load first diagram by default ──
+  presetSelect.value = 'configs/diagram_0.json';
+  presetSelect.dispatchEvent(new Event('change'));
+})();
+</script>
+</body>
+</html>

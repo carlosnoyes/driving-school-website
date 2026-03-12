@@ -1,0 +1,49 @@
+{
+  "title": "4-Way Intersection with 2 Stop Signs and Compass",
+  "canvas": { "width": 816, "height": 1056 },
+  "background": "grass",
+
+  "roads": [
+    {
+      "id": "vertical",
+      "orientation": "vertical",
+      "center": 408,
+      "from": 0,
+      "to": 1056,
+      "laneWidth": 55,
+      "lanesPerDirection": 1,
+      "laneLine": "none",
+      "centerLineStyle": "none"
+    },
+    {
+      "id": "horizontal",
+      "orientation": "horizontal",
+      "center": 500,
+      "from": 0,
+      "to": 816,
+      "laneWidth": 55,
+      "lanesPerDirection": 1,
+      "laneLine": "none",
+      "centerLineStyle": "none"
+    }
+  ],
+
+  "intersections": [
+    {
+      "type": "fourWay",
+      "center": [408, 500],
+      "roads": ["vertical", "horizontal"]
+    }
+  ],
+
+  "vehicles": [],
+
+  "signals": [
+    { "type": "stopSign", "x": 345, "y": 445, "scale": 1.2 },
+    { "type": "stopSign", "x": 470, "y": 555, "scale": 1.2 }
+  ],
+
+  "decorations": [
+    { "type": "compass", "x": 700, "y": 900, "size": 35 }
+  ]
+}
