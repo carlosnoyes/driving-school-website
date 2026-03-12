@@ -13,7 +13,8 @@
       "laneWidth": 50,
       "lanesPerDirection": 1,
       "laneLine": "none",
-      "centerLineStyle": "dashed-yellow"
+      "centerLineStyle": "none",
+      "shoulder": 10
     },
     {
       "id": "horizontal",
@@ -24,7 +25,8 @@
       "laneWidth": 50,
       "lanesPerDirection": 1,
       "laneLine": "none",
-      "centerLineStyle": "none"
+      "centerLineStyle": "double-yellow",
+      "shoulder": 10
     }
   ],
 
@@ -32,15 +34,21 @@
     {
       "type": "fourWay",
       "center": [408, 528],
-      "roads": ["vertical", "horizontal"]
+      "roads": ["vertical", "horizontal"],
+      "radius": 25
     }
   ],
 
   "vehicles": [],
 
   "signals": [
-    { "type": "stopSign", "x": 475, "y": 475, "scale": 1.2 },
-    { "type": "stopSign", "x": 340, "y": 585, "scale": 1.2 }
+    { "type": "stopSign", "x": 330, "y": 402, "scale": 1.2 },
+    { "type": "stopSign", "x": 486, "y": 572, "scale": 1.2 }
+  ],
+
+  "stopLines": [
+    { "x1": 358, "y1": 443, "x2": 408, "y2": 443 },
+    { "x1": 408, "y1": 613, "x2": 458, "y2": 613 }
   ],
 
   "decorations": []

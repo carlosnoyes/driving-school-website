@@ -244,6 +244,14 @@ const Diagram = (() => {
       else if (s.type === 'laneArrow') Signals.laneArrow(svg, s.x, s.y, s.direction, s);
     });
 
+    // 7b. Stop lines (solid white lines across lanes)
+    (cfg.stopLines || []).forEach(sl => {
+      SVG.line(svg, sl.x1, sl.y1, sl.x2, sl.y2, {
+        stroke: sl.color || '#fff',
+        'stroke-width': sl.width || 3,
+      });
+    });
+
     // 8. Vehicles
     (cfg.vehicles || []).forEach(v => {
       if (v.road) {

@@ -496,7 +496,15 @@ const Signals = (() => {
   function stopSign(p, x, y, opts = {}) {
     const sc = opts.scale || 1;
     const size = 14 * sc;
+    const poleH = opts.poleHeight || 20 * sc;
+    const rot = opts.rotation || 0;
     const g = SVG.group(p);
+    if (rot) g.setAttribute('transform', `rotate(${rot}, ${x}, ${y})`);
+    // Pole
+    SVG.line(g, x, y + size, x, y + size + poleH, {
+      stroke: '#222', 'stroke-width': 3 * sc, 'stroke-linecap': 'round',
+    });
+    // Octagon
     const pts = [];
     for (let i = 0; i < 8; i++) {
       const a = Math.PI / 8 + i * Math.PI / 4;
