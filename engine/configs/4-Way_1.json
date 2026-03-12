@@ -1,16 +1,11 @@
 {
   "title": "Empty 4-Way Intersection",
-  "canvas": { "width": 816, "height": 1056 },
-  "background": "grass",
 
   "roads": [
     {
       "id": "vertical",
       "orientation": "vertical",
       "center": 408,
-      "from": 0,
-      "to": 1056,
-      "laneWidth": 50,
       "lanesPerDirection": 2,
       "laneLine": "dashed",
       "median": 12,
@@ -20,10 +15,6 @@
       "id": "horizontal",
       "orientation": "horizontal",
       "center": 528,
-      "from": 0,
-      "to": 816,
-      "laneWidth": 50,
-      "lanesPerDirection": 1,
       "laneLine": "none",
       "centerLineStyle": "double-yellow",
       "shoulder": 10
@@ -32,14 +23,9 @@
 
   "intersections": [
     {
+      "id": "main",
       "type": "fourWay",
-      "center": [408, 528],
-      "roads": ["vertical", "horizontal"],
-      "radius": 25
+      "roads": ["vertical", "horizontal"]
     }
-  ],
-
-  "vehicles": [],
-  "signals": [],
-  "decorations": []
+  ]
 }

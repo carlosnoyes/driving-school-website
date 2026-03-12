@@ -1,0 +1,32 @@
+{
+  "title": "T-Intersection",
+
+  "roads": [
+    {
+      "id": "vertical",
+      "orientation": "vertical",
+      "center": 408,
+      "laneLine": "none",
+      "centerLineStyle": "double-yellow",
+      "shoulder": 10
+    },
+    {
+      "id": "horizontal",
+      "orientation": "horizontal",
+      "center": 528,
+      "from": 408,
+      "laneLine": "none",
+      "centerLineStyle": "double-yellow",
+      "shoulder": 10
+    }
+  ],
+
+  "intersections": [
+    {
+      "id": "main",
+      "type": "tJunction",
+      "blockedSide": "west",
+      "roads": ["vertical", "horizontal"]
+    }
+  ]
+}

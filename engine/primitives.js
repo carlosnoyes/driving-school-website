@@ -330,17 +330,18 @@ const Intersections = (() => {
 
   function tJunction(p, cx, cy, blockedSide, halfW, halfH) {
     const g = SVG.group(p);
-    SVG.rect(g, cx - halfH, cy - halfW, halfH * 2, halfW * 2, { fill: Roads.D.roadColor });
-    // Draw curb on the blocked side
-    const cw = 3;
-    if (blockedSide === 'north')
-      SVG.line(g, cx - halfH, cy - halfW, cx + halfH, cy - halfW, { stroke: '#ccc', 'stroke-width': cw });
-    else if (blockedSide === 'south')
-      SVG.line(g, cx - halfH, cy + halfW, cx + halfH, cy + halfW, { stroke: '#ccc', 'stroke-width': cw });
-    else if (blockedSide === 'east')
-      SVG.line(g, cx + halfH, cy - halfW, cx + halfH, cy + halfW, { stroke: '#ccc', 'stroke-width': cw });
-    else if (blockedSide === 'west')
-      SVG.line(g, cx - halfH, cy - halfW, cx - halfH, cy + halfW, { stroke: '#ccc', 'stroke-width': cw });
+    // Only fill the side-road half of the intersection, leaving the
+    // through-road's far side (blocked side) untouched.
+    if (blockedSide === 'west') {
+      // Through road is vertical, side road goes east. Fill from center rightward.
+      SVG.rect(g, cx, cy - halfW, halfH, halfW * 2, { fill: Roads.D.roadColor });
+    } else if (blockedSide === 'east') {
+      SVG.rect(g, cx - halfH, cy - halfW, halfH, halfW * 2, { fill: Roads.D.roadColor });
+    } else if (blockedSide === 'north') {
+      SVG.rect(g, cx - halfH, cy, halfH * 2, halfW, { fill: Roads.D.roadColor });
+    } else if (blockedSide === 'south') {
+      SVG.rect(g, cx - halfH, cy - halfW, halfH * 2, halfW, { fill: Roads.D.roadColor });
+    }
     return g;
   }
 
@@ -366,15 +367,45 @@ const Intersections = (() => {
     const right = cx + halfH;
     const top   = cy - halfW;
     const bot   = cy + halfW;
+    const blocked = opts.blockedSide || null;
 
     // Fill intersection box (masks lines through intersection)
-    SVG.rect(g, left, top, halfH * 2, halfW * 2, { fill: rc });
+    // For T-junctions, fill from just past the far shoulder line to the open side
+    const si = sh + 1; // shoulder inset — clear past the shoulder line thickness
+    if (blocked === 'west') {
+      SVG.rect(g, left + si, top, right - left - si, halfW * 2, { fill: rc });
+    } else if (blocked === 'east') {
+      SVG.rect(g, left, top, right - left - si, halfW * 2, { fill: rc });
+    } else if (blocked === 'north') {
+      SVG.rect(g, left, top + si, halfH * 2, bot - top - si, { fill: rc });
+    } else if (blocked === 'south') {
+      SVG.rect(g, left, top, halfH * 2, bot - top - si, { fill: rc });
+    } else {
+      SVG.rect(g, left, top, halfH * 2, halfW * 2, { fill: rc });
+    }
 
     // Arm extensions — mask road markings up to the radius point
-    if (arms.north) SVG.rect(g, left, top - r, halfH * 2, r, { fill: rc });
-    if (arms.south) SVG.rect(g, left, bot, halfH * 2, r, { fill: rc });
-    if (arms.west)  SVG.rect(g, left - r, top, r, halfW * 2, { fill: rc });
-    if (arms.east)  SVG.rect(g, right, top, r, halfW * 2, { fill: rc });
+    // For T-junctions, only extend on the side-road half
+    if (arms.north) {
+      if (blocked === 'west') SVG.rect(g, left + si, top - r, right - left - si, r, { fill: rc });
+      else if (blocked === 'east') SVG.rect(g, left, top - r, right - left - si, r, { fill: rc });
+      else SVG.rect(g, left, top - r, halfH * 2, r, { fill: rc });
+    }
+    if (arms.south) {
+      if (blocked === 'west') SVG.rect(g, left + si, bot, right - left - si, r, { fill: rc });
+      else if (blocked === 'east') SVG.rect(g, left, bot, right - left - si, r, { fill: rc });
+      else SVG.rect(g, left, bot, halfH * 2, r, { fill: rc });
+    }
+    if (arms.west) {
+      if (blocked === 'north') SVG.rect(g, left - r, top + si, r, bot - top - si, { fill: rc });
+      else if (blocked === 'south') SVG.rect(g, left - r, top, r, bot - top - si, { fill: rc });
+      else SVG.rect(g, left - r, top, r, halfW * 2, { fill: rc });
+    }
+    if (arms.east) {
+      if (blocked === 'north') SVG.rect(g, right, top + si, r, bot - top - si, { fill: rc });
+      else if (blocked === 'south') SVG.rect(g, right, top, r, bot - top - si, { fill: rc });
+      else SVG.rect(g, right, top, r, halfW * 2, { fill: rc });
+    }
 
     // Corner carving — fill r×r square, carve quarter circle with grass
     const grassColor = Terrain.C.grass;
@@ -494,24 +525,27 @@ const Signals = (() => {
   }
 
   function stopSign(p, x, y, opts = {}) {
+    // (x, y) = pole base (ground level)
     const sc = opts.scale || 1;
     const size = 14 * sc;
     const poleH = opts.poleHeight || 20 * sc;
     const rot = opts.rotation || 0;
     const g = SVG.group(p);
     if (rot) g.setAttribute('transform', `rotate(${rot}, ${x}, ${y})`);
+    // Octagon center, offset upward from pole base
+    const oy = y - poleH - size;
     // Pole
-    SVG.line(g, x, y + size, x, y + size + poleH, {
+    SVG.line(g, x, oy + size, x, y, {
       stroke: '#222', 'stroke-width': 3 * sc, 'stroke-linecap': 'round',
     });
     // Octagon
     const pts = [];
     for (let i = 0; i < 8; i++) {
       const a = Math.PI / 8 + i * Math.PI / 4;
-      pts.push(`${x + size * Math.cos(a)},${y + size * Math.sin(a)}`);
+      pts.push(`${x + size * Math.cos(a)},${oy + size * Math.sin(a)}`);
     }
     SVG.append(g, 'polygon', { points: pts.join(' '), fill: '#cc0000', stroke: '#880000', 'stroke-width': 1 });
-    SVG.text(g, x, y + 3 * sc, 'STOP', {
+    SVG.text(g, x, oy + 3 * sc, 'STOP', {
       fill: 'white', 'font-size': 7 * sc, 'font-weight': 'bold',
       'text-anchor': 'middle', 'font-family': 'Arial, sans-serif',
     });
@@ -576,6 +610,36 @@ const Parking = (() => {
     return g;
   }
 
+  // Vertical stall — opens left or right
+  function stallV(p, x, y, opts = {}) {
+    const w = opts.stallWidth || D.stallWidth;   // becomes the vertical extent
+    const d = opts.stallDepth || D.stallDepth;   // becomes the horizontal extent
+    const dir = opts.direction || 'left';
+    const c = opts.lineColor || D.lineColor;
+    const lw = opts.lineWidth || D.lineWidth;
+    const g = SVG.group(p);
+    SVG.line(g, x, y, x + d, y, { stroke: c, 'stroke-width': lw });
+    SVG.line(g, x, y + w, x + d, y + w, { stroke: c, 'stroke-width': lw });
+    if (dir === 'left') SVG.line(g, x, y, x, y + w, { stroke: c, 'stroke-width': lw });
+    else SVG.line(g, x + d, y, x + d, y + w, { stroke: c, 'stroke-width': lw });
+    return g;
+  }
+
+  function stallColumn(p, x, y, count, opts = {}) {
+    const w = opts.stallWidth || D.stallWidth;
+    const g = SVG.group(p);
+    for (let i = 0; i < count; i++) stallV(g, x, y + i * w, opts);
+    return g;
+  }
+
+  function doubleColumn(p, x, y, count, opts = {}) {
+    const d = opts.stallDepth || D.stallDepth;
+    const g = SVG.group(p);
+    stallColumn(g, x, y, count, { ...opts, direction: 'right' });
+    stallColumn(g, x + d, y, count, { ...opts, direction: 'left' });
+    return g;
+  }
+
   function surface(p, x, y, w, h, opts = {}) {
     const g = SVG.group(p);
     SVG.rect(g, x, y, w, h, { fill: opts.surfaceColor || D.surfaceColor });
@@ -583,7 +647,7 @@ const Parking = (() => {
     return g;
   }
 
-  return { D, stall, stallRow, doubleRow, surface };
+  return { D, stall, stallRow, doubleRow, stallV, stallColumn, doubleColumn, surface };
 })();
 
 

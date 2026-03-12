@@ -116,17 +116,12 @@
   <h1>CDS Diagrams</h1>
   <select id="preset-select">
     <option value="">-- Select a diagram --</option>
-    <optgroup label="Replicated Diagrams">
-      <option value="configs/diagram_0.json">Diagram 0 — Empty Intersection</option>
-      <option value="configs/diagram_1.json">Diagram 1 — Intersection + Vehicles</option>
-      <option value="configs/diagram_2.json">Diagram 2 — Parking Lot</option>
-    </optgroup>
-    <optgroup label="From Drawings">
-      <option value="configs/drawing_1.json">Drawing 1 — 2 Stop Signs</option>
-      <option value="configs/drawing_2.json">Drawing 2 — Street Parking</option>
-      <option value="configs/drawing_3.json">Drawing 3 — Traffic Lights</option>
-      <option value="configs/drawing_4.json">Drawing 4 — Stop Signs + Compass</option>
-    </optgroup>
+    <option value="configs/4-Way_1.json">4-Way 1 — Intersection</option>
+    <option value="configs/Stop_1.json">Stop 1 — Stop Signs</option>
+    <option value="configs/3-Way_1.json">3-Way 1 — T-Intersection</option>
+    <option value="configs/Parking_1.json">Parking 1 — Parking Lot</option>
+    <option value="configs/Parking_2.json">Parking 2 — Parking Lot + Street</option>
+    <option value="configs/Parking_3.json">Parking 3 — Parking Lot + Street</option>
   </select>
   <button id="btn-load-file">Load JSON File…</button>
   <input type="file" id="file-input" accept=".json" style="display:none">
@@ -244,7 +239,7 @@
   });
 
   // ── Load first diagram by default ──
-  presetSelect.value = 'configs/diagram_0.json';
+  presetSelect.value = 'configs/4-Way_1.json';
   presetSelect.dispatchEvent(new Event('change'));
 })();
 </script>

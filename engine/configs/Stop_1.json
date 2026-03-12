@@ -1,0 +1,40 @@
+{
+  "title": "4-Way Intersection with 2 Stop Signs (Uncontrolled Cross)",
+
+  "roads": [
+    {
+      "id": "vertical",
+      "orientation": "vertical",
+      "center": 408,
+      "laneLine": "none",
+      "centerLineStyle": "none",
+      "shoulder": 10
+    },
+    {
+      "id": "horizontal",
+      "orientation": "horizontal",
+      "center": 528,
+      "laneLine": "none",
+      "centerLineStyle": "double-yellow",
+      "shoulder": 10
+    }
+  ],
+
+  "intersections": [
+    {
+      "id": "main",
+      "type": "fourWay",
+      "roads": ["vertical", "horizontal"]
+    }
+  ],
+
+  "signals": [
+    { "id": "stop-north", "type": "stopSign", "intersection": "main", "approach": "north", "scale": 1.2 },
+    { "id": "stop-south", "type": "stopSign", "intersection": "main", "approach": "south", "scale": 1.2 }
+  ],
+
+  "stopLines": [
+    { "signal": "stop-north" },
+    { "signal": "stop-south" }
+  ]
+}
