@@ -5,12 +5,11 @@
     {
       "x": 0,
       "y": 0,
-      "width": 816,
-      "height": 1056,
+      "edgeMargin": "far",
       "rows": [
-        { "type": "single", "orientation": "vertical", "x": 0,   "y": 78, "stallsPerColumn": 18, "direction": "left" },
-        { "type": "double", "orientation": "vertical", "x": 200, "y": 78, "stallsPerColumn": 18 },
-        { "type": "double", "orientation": "vertical", "x": 500, "y": 78, "stallsPerColumn": 18 }
+        { "type": "single", "orientation": "vertical", "stallsPerColumn": 18, "direction": "left" },
+        { "type": "double", "orientation": "vertical", "stallsPerColumn": 18 },
+        { "type": "double", "orientation": "vertical", "stallsPerColumn": 18 }
       ]
     }
   ]

@@ -39,12 +39,12 @@ Two core files power the engine:
 
 ### JSON Config Structure
 
-Configs live in `src/configs/`. Each defines a complete diagram with sections: `canvas`, `zoom`, `defaults`, `roads`, `intersections`, `parkingLots`, `connectors`, `entrances`, `vehicles`, `signals`, `stopLines`, `decorations`.
+Configs live in `src/configs/`. Each defines a complete diagram with sections: `canvas`, `zoom`, `defaults`, `roads`, `intersections`, `parkingLots`, `connectors`, `entrances`, `vehicles`, `decorations`. Stop lines and signals are sub-elements of `intersections[].stopLines[]` — each stop line has an `approach` direction and an optional `signal` object.
 
 ### Key Patterns
 
 - **Zoom scaling**: `applyDefaults()` multiplies all positional/dimensional values by the `zoom` factor
-- **Auto-derivation**: Intersection centers, signal positions, and stop line positions are auto-calculated from referenced roads/intersections via `id` linking — many coordinates are optional
+- **Auto-derivation**: Intersection centers, stop line positions, and signal positions are auto-calculated from the intersection's roads and `approach` direction — many coordinates are optional
 - **No module bundler**: Plain JS with IIFE pattern, scripts attached to `window`
 
 ### Viewer UI (`src/viewer.html`)

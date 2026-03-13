@@ -1,5 +1,8 @@
 {
-  "title": "4-Way Intersection with 4 Stop Signs (All-Way Stop)",
+  "title": "4-Way All-Way Stop (Zoomed 2:1)",
+
+  "zoom": 2,
+  "zoomOrigin": "center",
 
   "roads": [
     {

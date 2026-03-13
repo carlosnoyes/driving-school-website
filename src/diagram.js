@@ -8,10 +8,11 @@ const Diagram = (() => {
   /* ── Default values ── */
   const DEFAULTS = {
     laneWidth: 50,
-    shoulder: -1,          // -1 = no shoulder
+    shoulder: 10,
     radius: 25,
     stallWidth: 50,
     stallDepth: 100,
+    laneGap: 100,           // driving-lane width in parking lots (2 × laneWidth)
     vehicleWidth: 30,      // 0.6 × laneWidth
     vehicleHeight: 75,     // 1.5 × laneWidth (medium)
   };
@@ -73,12 +74,147 @@ const Diagram = (() => {
       ix.radius = ix.radius ?? d.radius;
     });
 
-    // Parking lots
+    // Parking lots — apply row defaults, then auto-calculate dimensions
     (cfg.parkingLots || []).forEach(lot => {
-      (lot.rows || []).forEach(row => {
+      const rows = lot.rows || [];
+      rows.forEach(row => {
         row.stallWidth = row.stallWidth ?? d.stallWidth;
         row.stallDepth = row.stallDepth ?? d.stallDepth;
       });
+      if (rows.length === 0) return;
+
+      const EDGE_CLOSE = 10;
+      const isVertical = rows[0].orientation === 'vertical';
+      const sw0 = rows[0].stallWidth;
+      const laneGap = lot.laneGap ?? d.laneGap;
+      lot._laneGap = laneGap;  // store for rendering
+
+      // Normalize per-row splits — stall indices where orthogonal driving lanes cut through
+      rows.forEach(row => {
+        row._splits = (row.splits || []).slice().sort((a, b) => a - b);
+      });
+
+      // Parse edgeMargin — applies to the perpendicular-to-stacking dimension
+      // "close" (10px) or "far" (laneGap) on each side
+      let emStart, emEnd;
+      if (Array.isArray(lot.edgeMargin)) {
+        emStart = lot.edgeMargin[0] === 'close' ? EDGE_CLOSE : laneGap;
+        emEnd   = lot.edgeMargin[1] === 'close' ? EDGE_CLOSE : laneGap;
+      } else {
+        const px = (lot.edgeMargin || 'far') === 'close' ? EDGE_CLOSE : laneGap;
+        emStart = px;
+        emEnd   = px;
+      }
+
+      if (!isVertical) {
+        // Horizontal rows — stack along Y, stalls along X
+
+        // Auto-calculate row Y offsets and lot height
+        if (lot.height == null) {
+          let curY = (rows[0].type === 'double') ? laneGap : EDGE_CLOSE;
+          rows.forEach((row, i) => {
+            if (i > 0) curY += laneGap;  // driving-lane gap
+            if (row.y == null && row.offsetY == null) row.offsetY = curY;
+            curY += (row.type === 'double') ? row.stallDepth * 2 : row.stallDepth;
+          });
+          const lastRow = rows[rows.length - 1];
+          curY += (lastRow.type === 'double') ? laneGap : EDGE_CLOSE;
+          lot.height = curY;
+        }
+
+        // Auto-calculate row X offsets and lot width
+        // Per-row width = stalls × stallWidth + applicable splits × laneGap
+        const maxRowWidth = Math.max(...rows.map(r => {
+          const cnt = r.stallsPerRow || 1;
+          const numSplits = r._splits.filter(s => s > 0 && s < cnt).length;
+          return cnt * sw0 + numSplits * laneGap;
+        }));
+        if (lot.width == null) {
+          lot.width = emStart + maxRowWidth + emEnd;
+        }
+        rows.forEach(row => {
+          if (row.x == null && row.offsetX == null) row.offsetX = emStart;
+        });
+
+      } else {
+        // Vertical columns — stack along X, stalls along Y
+
+        if (lot.width == null) {
+          let curX = (rows[0].type === 'double') ? laneGap : EDGE_CLOSE;
+          rows.forEach((row, i) => {
+            if (i > 0) curX += laneGap;
+            if (row.x == null && row.offsetX == null) row.offsetX = curX;
+            curX += (row.type === 'double') ? row.stallDepth * 2 : row.stallDepth;
+          });
+          const lastRow = rows[rows.length - 1];
+          curX += (lastRow.type === 'double') ? laneGap : EDGE_CLOSE;
+          lot.width = curX;
+        }
+
+        const maxColHeight = Math.max(...rows.map(r => {
+          const cnt = r.stallsPerColumn || 1;
+          const numSplits = r._splits.filter(s => s > 0 && s < cnt).length;
+          return cnt * sw0 + numSplits * laneGap;
+        }));
+        if (lot.height == null) {
+          lot.height = emStart + maxColHeight + emEnd;
+        }
+        rows.forEach(row => {
+          if (row.y == null && row.offsetY == null) row.offsetY = emStart;
+        });
+      }
+    });
+
+    // Parking lot road-linked positioning — derive lot x/y from the
+    // road it connects to (typically a short sidestreet that dead-ends
+    // into the lot).  The `entrance` property (1-based) aligns a specific
+    // driving-lane gap with the road's center line.
+    (cfg.parkingLots || []).forEach((lot) => {
+      if (!lot.road) return;
+      const road = roadLookup[lot.road];
+      if (!road) return;
+      const rows = lot.rows || [];
+      if (rows.length === 0) return;
+
+      const side = lot.side || 'east';
+      const laneGap = lot._laneGap;
+      const isVertRows = rows[0].orientation === 'vertical';
+
+      // Compute driving-lane centers within the lot (relative to lot origin)
+      const laneCenters = [];
+      for (let i = 0; i < rows.length - 1; i++) {
+        const row = rows[i];
+        const offset = isVertRows ? (row.offsetX || 0) : (row.offsetY || 0);
+        const size = (row.type === 'double') ? row.stallDepth * 2 : row.stallDepth;
+        laneCenters.push(offset + size + laneGap / 2);
+      }
+
+      const entranceIdx = (lot.entrance || 1) - 1;  // 1-based → 0-based
+      const gapCenter = laneCenters[entranceIdx] || laneCenters[0] || 0;
+
+      if (road.orientation === 'horizontal') {
+        // Horizontal sidestreet — lot attaches to its east or west end
+        const deadEnd = (side === 'east')
+          ? Math.max(road.from, road.to)
+          : Math.min(road.from, road.to);
+        if (lot.x == null) {
+          lot.x = (side === 'east') ? deadEnd : deadEnd - lot.width;
+        }
+        if (lot.y == null) {
+          lot.y = road.center - gapCenter;
+        }
+      } else {
+        // Vertical sidestreet — lot attaches to its south or north end
+        const deadEnd = (side === 'south')
+          ? Math.max(road.from, road.to)
+          : Math.min(road.from, road.to);
+        if (lot.y == null) {
+          lot.y = (side === 'south') ? deadEnd : deadEnd - lot.height;
+        }
+        if (lot.x == null) {
+          lot.x = road.center - gapCenter;
+        }
+      }
     });
 
     // Entrances — derive center, shoulder, radius from linked road
@@ -109,12 +245,6 @@ const Diagram = (() => {
       v.height = v.height ?? sz.height;
     });
 
-    // Build intersection lookup (for signal/stopLine derivation)
-    const ixLookup = {};
-    (cfg.intersections || []).forEach(ix => {
-      if (ix.id) ixLookup[ix.id] = ix;
-    });
-
     // Helper: get intersection geometry
     function ixGeom(ix) {
       const r0 = roadLookup[ix.roads?.[0]];
@@ -132,67 +262,100 @@ const Diagram = (() => {
       };
     }
 
-    // Signals — derive position from intersection + approach if not explicit
-    const sigLookup = {};
-    (cfg.signals || []).forEach(sig => {
-      const ix = sig.intersection ? ixLookup[sig.intersection] : null;
-      if (ix && sig.approach && ix.center) {
-        const g = ixGeom(ix);
-        if (!g) return;
-        const gap = sig.gap ?? 18;
-        const cx = ix.center[0], cy = ix.center[1];
-        if (sig.approach === 'north') {
-          sig.x = sig.x ?? cx - g.halfH + g.vShoulder - gap;
-          sig.y = sig.y ?? cy - g.halfW - gap;
-        } else if (sig.approach === 'south') {
-          sig.x = sig.x ?? cx + g.halfH - g.vShoulder + gap;
-          sig.y = sig.y ?? cy + g.halfW + gap;
-        } else if (sig.approach === 'east') {
-          sig.x = sig.x ?? cx + g.halfH + gap;
-          sig.y = sig.y ?? cy - g.halfW + g.hShoulder - gap;
-        } else if (sig.approach === 'west') {
-          sig.x = sig.x ?? cx - g.halfH - gap;
-          sig.y = sig.y ?? cy + g.halfW - g.hShoulder + gap;
-        }
-      }
-      if (sig.id) sigLookup[sig.id] = sig;
-    });
+    // Intersection stop lines — derive positions from intersection + approach
+    (cfg.intersections || []).forEach(ix => {
+      if (!ix.center) return;
+      const g = ixGeom(ix);
+      if (!g) return;
+      const cx = ix.center[0], cy = ix.center[1];
 
-    // Stop lines — derive from signal's intersection + approach if not explicit
-    (cfg.stopLines || []).forEach(sl => {
-      const sig = sl.signal ? sigLookup[sl.signal] : null;
-      const ix = sig?.intersection ? ixLookup[sig.intersection] : null;
-      if (ix && sig?.approach && ix.center) {
-        const g = ixGeom(ix);
-        if (!g) return;
+      (ix.stopLines || []).forEach(sl => {
+        const approach = sl.approach;
+        if (!approach) return;
         const offset = sl.offset ?? 15;
-        const cx = ix.center[0], cy = ix.center[1];
-        if (sig.approach === 'north') {
+        if (approach === 'north') {
           const ly = cy - g.halfW - offset;
           sl.x1 = sl.x1 ?? cx - g.halfH + g.vShoulder;
           sl.y1 = sl.y1 ?? ly;
           sl.x2 = sl.x2 ?? cx;
           sl.y2 = sl.y2 ?? ly;
-        } else if (sig.approach === 'south') {
+        } else if (approach === 'south') {
           const ly = cy + g.halfW + offset;
           sl.x1 = sl.x1 ?? cx;
           sl.y1 = sl.y1 ?? ly;
           sl.x2 = sl.x2 ?? cx + g.halfH - g.vShoulder;
           sl.y2 = sl.y2 ?? ly;
-        } else if (sig.approach === 'east') {
+        } else if (approach === 'east') {
           const lx = cx + g.halfH + offset;
           sl.x1 = sl.x1 ?? lx;
           sl.y1 = sl.y1 ?? cy - g.halfW + g.hShoulder;
           sl.x2 = sl.x2 ?? lx;
           sl.y2 = sl.y2 ?? cy;
-        } else if (sig.approach === 'west') {
+        } else if (approach === 'west') {
           const lx = cx - g.halfH - offset;
           sl.x1 = sl.x1 ?? lx;
           sl.y1 = sl.y1 ?? cy;
           sl.x2 = sl.x2 ?? lx;
           sl.y2 = sl.y2 ?? cy + g.halfW - g.hShoulder;
         }
-      }
+      });
+
+      // Intersection signals — derive positions from intersection + approach
+      (ix.signals || []).forEach(sig => {
+        const approach = sig.approach;
+        if (!approach) return;
+
+        if (sig.type === 'trafficLight') {
+          // Place one light per lane, centered in each lane
+          const isVertApproach = (approach === 'north' || approach === 'south');
+          const r0 = roadLookup[ix.roads?.[0]];
+          const r1 = roadLookup[ix.roads?.[1]];
+          const road = isVertApproach
+            ? (r0?.orientation === 'vertical' ? r0 : r1)
+            : (r0?.orientation === 'horizontal' ? r0 : r1);
+          if (!road) return;
+          const lw = road.laneWidth || 50;
+          const lpd = road.lanesPerDirection || 1;
+          const med = road.median || 0;
+          const offset = sig.offset ?? 15;
+          const lanes = sig.lanes ?? Array.from({ length: lpd }, (_, i) => i);
+
+          const dir = isVertApproach ? 'east' : 'south';
+          sig._lights = lanes.map(lane => {
+            let lx, ly;
+            if (approach === 'north') {
+              lx = cx - med / 2 - lw / 2 - lane * lw;
+              ly = cy - g.halfW - offset;
+            } else if (approach === 'south') {
+              lx = cx + med / 2 + lw / 2 + lane * lw;
+              ly = cy + g.halfW + offset;
+            } else if (approach === 'east') {
+              lx = cx + g.halfH + offset;
+              ly = cy - med / 2 - lw / 2 - lane * lw;
+            } else if (approach === 'west') {
+              lx = cx - g.halfH - offset;
+              ly = cy + med / 2 + lw / 2 + lane * lw;
+            }
+            return { x: lx, y: ly, direction: dir };
+          });
+        } else {
+          // Point signals (stopSign, etc.) — single position at corner
+          const gap = sig.gap ?? 18;
+          if (approach === 'north') {
+            sig.x = sig.x ?? cx - g.halfH + g.vShoulder - gap;
+            sig.y = sig.y ?? cy - g.halfW - gap;
+          } else if (approach === 'south') {
+            sig.x = sig.x ?? cx + g.halfH - g.vShoulder + gap;
+            sig.y = sig.y ?? cy + g.halfW + gap;
+          } else if (approach === 'east') {
+            sig.x = sig.x ?? cx + g.halfH + gap;
+            sig.y = sig.y ?? cy - g.halfW + g.hShoulder - gap;
+          } else if (approach === 'west') {
+            sig.x = sig.x ?? cx - g.halfH - gap;
+            sig.y = sig.y ?? cy + g.halfW - g.hShoulder + gap;
+          }
+        }
+      });
     });
 
     return cfg;
@@ -340,19 +503,26 @@ const Diagram = (() => {
 
     });
 
-    // 7. Stop lines (solid white lines across lanes)
-    (cfg.stopLines || []).forEach(sl => {
-      SVG.line(svg, sl.x1, sl.y1, sl.x2, sl.y2, {
-        stroke: sl.color || '#fff',
-        'stroke-width': sl.width || 3,
+    // 7. Stop lines (sub-elements of intersections)
+    (cfg.intersections || []).forEach(ix => {
+      (ix.stopLines || []).forEach(sl => {
+        SVG.line(svg, sl.x1, sl.y1, sl.x2, sl.y2, {
+          stroke: sl.color || '#fff',
+          'stroke-width': sl.width || 3,
+        });
       });
     });
 
-    // 7b. Signals (rendered after stop lines so signs layer on top)
-    (cfg.signals || []).forEach(s => {
-      if (s.type === 'stopSign') Signals.stopSign(svg, s.x, s.y, s);
-      else if (s.type === 'trafficLight') Signals.trafficLight(svg, s.x, s.y, s);
-      else if (s.type === 'laneArrow') Signals.laneArrow(svg, s.x, s.y, s.direction, s);
+    // 7b. Signals (sub-elements of intersections, rendered after stop lines)
+    (cfg.intersections || []).forEach(ix => {
+      (ix.signals || []).forEach(s => {
+        if (s.type === 'trafficLight' && s._lights) {
+          s._lights.forEach(light => {
+            Signals.trafficLight(svg, light.x, light.y, { ...s, direction: light.direction });
+          });
+        } else if (s.type === 'stopSign') Signals.stopSign(svg, s.x, s.y, s);
+        else if (s.type === 'laneArrow') Signals.laneArrow(svg, s.x, s.y, s.direction, s);
+      });
     });
 
     // 8. Vehicles
@@ -393,27 +563,71 @@ const Diagram = (() => {
     }
   }
 
+  /* ── Parking helpers ── */
+
+  /**
+   * Compute the extra pixel offset for a given stall index due to splits.
+   * Each split before the index adds one laneGap of space.
+   */
+  function splitOffset(stallIdx, splits, laneGap) {
+    let count = 0;
+    for (const s of splits) {
+      if (s <= stallIdx) count++;
+      else break;  // splits are sorted
+    }
+    return count * laneGap;
+  }
+
+  /**
+   * Break a total stall count into segments separated by splits.
+   * Returns [{ start, count }, …] where start is the stall index.
+   */
+  function splitSegments(totalStalls, splits) {
+    const segs = [];
+    let prev = 0;
+    for (const s of splits) {
+      if (s > prev && s < totalStalls) {
+        segs.push({ start: prev, count: s - prev });
+        prev = s;
+      }
+    }
+    segs.push({ start: prev, count: totalStalls - prev });
+    return segs;
+  }
+
   /* ── Parking lot rendering ── */
   function renderParkingLot(svg, lot) {
     Parking.surface(svg, lot.x, lot.y, lot.width, lot.height);
+    const laneGap = lot._laneGap || 100;
+
     (lot.rows || []).forEach(row => {
       const opts = { stallWidth: row.stallWidth, stallDepth: row.stallDepth, direction: row.direction };
+      const sw = row.stallWidth;
       const rx = row.x ?? lot.x + (row.offsetX || 0);
       const ry = row.y ?? lot.y + (row.offsetY || 0);
-      const count = row.stallsPerRow || row.stallsPerColumn || 1;
-      if (row.orientation === 'vertical') {
-        if (row.type === 'double') {
-          Parking.doubleColumn(svg, rx, ry, count, opts);
+      const isVert = row.orientation === 'vertical';
+      const count = isVert ? (row.stallsPerColumn || 1) : (row.stallsPerRow || 1);
+      const rowSplits = row._splits || [];
+      const segs = splitSegments(count, rowSplits);
+
+      segs.forEach(seg => {
+        const gapPx = splitOffset(seg.start, rowSplits, laneGap);
+        if (isVert) {
+          const segY = ry + seg.start * sw + gapPx;
+          if (row.type === 'double') {
+            Parking.doubleColumn(svg, rx, segY, seg.count, opts);
+          } else {
+            Parking.stallColumn(svg, rx, segY, seg.count, opts);
+          }
         } else {
-          Parking.stallColumn(svg, rx, ry, count, opts);
+          const segX = rx + seg.start * sw + gapPx;
+          if (row.type === 'double') {
+            Parking.doubleRow(svg, segX, ry, seg.count, opts);
+          } else {
+            Parking.stallRow(svg, segX, ry, seg.count, opts);
+          }
         }
-      } else {
-        if (row.type === 'double') {
-          Parking.doubleRow(svg, rx, ry, count, opts);
-        } else {
-          Parking.stallRow(svg, rx, ry, count, opts);
-        }
-      }
+      });
     });
   }
 
@@ -509,6 +723,9 @@ const Diagram = (() => {
     const stallIdx = v.stall ?? 0;
     const isVertical = row.orientation === 'vertical';
     const carH = v.height;
+    const rowSplits = row._splits || [];
+    const laneGap = lot._laneGap || 100;
+    const gapPx = splitOffset(stallIdx, rowSplits, laneGap);
 
     // Nose-alignment offset: shift car so noses align at the medium-car reference depth.
     // Positive pullSign = nose points toward increasing coordinate.
@@ -518,7 +735,7 @@ const Diagram = (() => {
     let cx, cy, direction;
 
     if (isVertical) {
-      cy = ry + stallIdx * sw + sw / 2;
+      cy = ry + stallIdx * sw + sw / 2 + gapPx;
       if (row.type === 'double') {
         if ((v.subRow || 'left') === 'left') {
           cx = rx + sd / 2;
@@ -534,7 +751,7 @@ const Diagram = (() => {
       // Apply pull-in offset along x axis
       cx += (direction === 'east' ? pullDelta : -pullDelta);
     } else {
-      cx = rx + stallIdx * sw + sw / 2;
+      cx = rx + stallIdx * sw + sw / 2 + gapPx;
       if (row.type === 'double') {
         if ((v.subRow || 'top') === 'top') {
           cy = ry + sd / 2;

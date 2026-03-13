@@ -7,8 +7,7 @@
       "orientation": "vertical",
       "center": 408,
       "laneLine": "none",
-      "centerLineStyle": "double-yellow",
-      "shoulder": 10
+      "centerLineStyle": "double-yellow"
     },
     {
       "id": "horizontal",
@@ -16,8 +15,7 @@
       "center": 528,
       "from": 408,
       "laneLine": "none",
-      "centerLineStyle": "double-yellow",
-      "shoulder": 10
+      "centerLineStyle": "double-yellow"
     }
   ],
 

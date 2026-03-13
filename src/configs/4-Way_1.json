@@ -8,16 +8,14 @@
       "center": 408,
       "lanesPerDirection": 2,
       "laneLine": "dashed",
-      "median": 12,
-      "shoulder": 10
+      "median": 12
     },
     {
       "id": "horizontal",
       "orientation": "horizontal",
       "center": 528,
       "laneLine": "none",
-      "centerLineStyle": "double-yellow",
-      "shoulder": 10
+      "centerLineStyle": "double-yellow"
     }
   ],
 

@@ -521,7 +521,6 @@ const Signals = (() => {
       SVG.circle(g, x, ly, r, { fill: c === active ? on[c] : off[c], stroke: '#111', 'stroke-width': 0.5 });
     });
 
-    SVG.rect(g, x - 2 * sc, y + h / 2, 4 * sc, 15 * sc, { fill: '#555', stroke: '#333', 'stroke-width': 0.5 });
     return g;
   }
 
@@ -577,7 +576,6 @@ const Signals = (() => {
 
 const Parking = (() => {
   const D = {
-    stallWidth: 40, stallDepth: 70,
     lineColor: '#ffffff', lineWidth: 1.5,
     surfaceColor: '#555555', borderColor: '#cccccc', borderWidth: 2,
   };

@@ -1,19 +1,19 @@
 {
-  "title": "4-Way Intersection with 4 Stop Signs (All-Way Stop)",
+  "title": "4-Way Intersection with 4 Traffic Lights (2 Lanes Each Way)",
 
   "roads": [
     {
       "id": "vertical",
       "orientation": "vertical",
       "center": 408,
-      "laneLine": "none",
+      "lanesPerDirection": 2,
       "centerLineStyle": "double-yellow"
     },
     {
       "id": "horizontal",
       "orientation": "horizontal",
       "center": 528,
-      "laneLine": "none",
+      "lanesPerDirection": 2,
       "centerLineStyle": "double-yellow"
     }
   ],
@@ -30,10 +30,10 @@
         { "approach": "west" }
       ],
       "signals": [
-        { "approach": "north", "type": "stopSign", "scale": 1.2 },
-        { "approach": "south", "type": "stopSign", "scale": 1.2 },
-        { "approach": "east", "type": "stopSign", "scale": 1.2 },
-        { "approach": "west", "type": "stopSign", "scale": 1.2 }
+        { "approach": "north", "type": "trafficLight" },
+        { "approach": "south", "type": "trafficLight" },
+        { "approach": "east", "type": "trafficLight" },
+        { "approach": "west", "type": "trafficLight" }
       ]
     }
   ]
