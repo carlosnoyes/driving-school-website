@@ -36,7 +36,7 @@ const SVG = (() => {
 
   // Simple seeded PRNG for deterministic decoration
   function seedRandom(seed) {
-    let s = seed || 1;
+    let s = Math.abs(seed) || 1;
     return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
   }
 
@@ -214,7 +214,8 @@ const Roads = (() => {
     const sh = opts.shoulder ?? -1;   // -1 means no shoulder at all
     const rc = opts.roadColor || D.roadColor;
     const lanesW = lw * lpd;         // width of lanes on one side
-    const totalW = lanesW * 2 + med + (sh > 0 ? sh * 2 : 0);
+    const center = med > 0 ? 0 : 1;  // 1px center pixel when no median
+    const totalW = lanesW * 2 + med + center + (sh > 0 ? sh * 2 : 0);
     const left = cx - totalW / 2;
     const g = SVG.group(p);
     const yMin = Math.min(y1, y2), yLen = Math.abs(y2 - y1);
@@ -244,7 +245,7 @@ const Roads = (() => {
     if (ll !== 'none') {
       for (let i = 1; i < lpd; i++) {
         const lx = lanesLeftEdge + i * lw;
-        const rx = cx + med / 2 + i * lw;
+        const rx = cx + (med + center) / 2 + i * lw;
         if (ll === 'solid') {
           solidLine(g, lx, y1, lx, y2, { color: '#fff', width: D.laneLineWidth });
           solidLine(g, rx, y1, rx, y2, { color: '#fff', width: D.laneLineWidth });
@@ -264,7 +265,8 @@ const Roads = (() => {
     const sh = opts.shoulder ?? -1;
     const rc = opts.roadColor || D.roadColor;
     const lanesW = lw * lpd;
-    const totalW = lanesW * 2 + med + (sh > 0 ? sh * 2 : 0);
+    const center = med > 0 ? 0 : 1;  // 1px center pixel when no median
+    const totalW = lanesW * 2 + med + center + (sh > 0 ? sh * 2 : 0);
     const top = cy - totalW / 2;
     const g = SVG.group(p);
     const xMin = Math.min(x1, x2), xLen = Math.abs(x2 - x1);
@@ -289,7 +291,7 @@ const Roads = (() => {
     if (ll !== 'none') {
       for (let i = 1; i < lpd; i++) {
         const ty = lanesTopEdge + i * lw;
-        const by = cy + med / 2 + i * lw;
+        const by = cy + (med + center) / 2 + i * lw;
         if (ll === 'solid') {
           solidLine(g, x1, ty, x2, ty, { color: '#fff', width: D.laneLineWidth });
           solidLine(g, x1, by, x2, by, { color: '#fff', width: D.laneLineWidth });
@@ -310,7 +312,8 @@ const Roads = (() => {
     const lpd = lanesPerDirection || 1;
     const med = median || 0;
     const sh = (shoulder != null && shoulder >= 0) ? shoulder : 0;
-    return lw * lpd * 2 + med + (sh > 0 ? sh * 2 : 0);
+    const center = med > 0 ? 0 : 1;  // 1px center pixel when no median
+    return lw * lpd * 2 + med + center + (sh > 0 ? sh * 2 : 0);
   }
 
   return { D, dashedLine, solidLine, centerLine, verticalRoad, horizontalRoad, roadWidth };
@@ -458,13 +461,17 @@ const Intersections = (() => {
     if (!armA || !armB) return;
     const sx = dx < 0 ? ex - r : ex;
     const sy = dy < 0 ? ey - r : ey;
-    SVG.rect(g, sx, sy, r, r, { fill: roadColor });
 
     const ax1 = ex + dx * r, ay1 = ey;
     const ax2 = ex, ay2 = ey + dy * r;
     const sweep = (dx * dy > 0) ? 0 : 1;
     const cornerX = ex + dx * r, cornerY = ey + dy * r;
-    SVG.path(g, `M ${cornerX} ${cornerY} L ${ax1} ${ay1} A ${r} ${r} 0 0 ${sweep} ${ax2} ${ay2} L ${cornerX} ${cornerY} Z`, { fill: bgColor });
+
+    // Even-odd path: outer rect (CW) + inner quarter-circle (reversed winding)
+    // creates a hole where the background grass shows through naturally
+    const rectD = `M ${sx} ${sy} h ${r} v ${r} h ${-r} Z`;
+    const holeD = `M ${cornerX} ${cornerY} L ${ax2} ${ay2} A ${r} ${r} 0 0 ${1 - sweep} ${ax1} ${ay1} Z`;
+    SVG.path(g, rectD + ' ' + holeD, { fill: roadColor, 'fill-rule': 'evenodd' });
   }
 
 
@@ -525,27 +532,20 @@ const Signals = (() => {
   }
 
   function stopSign(p, x, y, opts = {}) {
-    // (x, y) = pole base (ground level)
+    // (x, y) = octagon center
     const sc = opts.scale || 1;
     const size = 14 * sc;
-    const poleH = opts.poleHeight || 20 * sc;
     const rot = opts.rotation || 0;
     const g = SVG.group(p);
     if (rot) g.setAttribute('transform', `rotate(${rot}, ${x}, ${y})`);
-    // Octagon center, offset upward from pole base
-    const oy = y - poleH - size;
-    // Pole
-    SVG.line(g, x, oy + size, x, y, {
-      stroke: '#222', 'stroke-width': 3 * sc, 'stroke-linecap': 'round',
-    });
     // Octagon
     const pts = [];
     for (let i = 0; i < 8; i++) {
       const a = Math.PI / 8 + i * Math.PI / 4;
-      pts.push(`${x + size * Math.cos(a)},${oy + size * Math.sin(a)}`);
+      pts.push(`${x + size * Math.cos(a)},${y + size * Math.sin(a)}`);
     }
     SVG.append(g, 'polygon', { points: pts.join(' '), fill: '#cc0000', stroke: '#880000', 'stroke-width': 1 });
-    SVG.text(g, x, oy + 3 * sc, 'STOP', {
+    SVG.text(g, x, y + 3 * sc, 'STOP', {
       fill: 'white', 'font-size': 7 * sc, 'font-weight': 'bold',
       'text-anchor': 'middle', 'font-family': 'Arial, sans-serif',
     });

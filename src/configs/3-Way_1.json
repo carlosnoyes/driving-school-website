@@ -5,15 +5,15 @@
     {
       "id": "vertical",
       "orientation": "vertical",
-      "center": 408,
+      "center": 0,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     },
     {
       "id": "horizontal",
       "orientation": "horizontal",
-      "center": 528,
-      "from": 408,
+      "center": 0,
+      "from": 0,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     }

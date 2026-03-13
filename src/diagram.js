@@ -40,8 +40,8 @@ const Diagram = (() => {
 
     // Canvas
     cfg.canvas = cfg.canvas || {};
-    cfg.canvas.width = cfg.canvas.width || 816;
-    cfg.canvas.height = cfg.canvas.height || 1056;
+    cfg.canvas.width = cfg.canvas.width || 1057;
+    cfg.canvas.height = cfg.canvas.height || 817;
     const cW = cfg.canvas.width;
     const cH = cfg.canvas.height;
 
@@ -49,11 +49,11 @@ const Diagram = (() => {
     (cfg.roads || []).forEach(r => {
       r.laneWidth = r.laneWidth ?? d.laneWidth;
       if (r.orientation === 'vertical') {
-        r.from = r.from ?? 0;
-        r.to = r.to ?? cH;
+        r.from = r.from ?? -cH / 2;
+        r.to = r.to ?? cH / 2;
       } else {
-        r.from = r.from ?? 0;
-        r.to = r.to ?? cW;
+        r.from = r.from ?? -cW / 2;
+        r.to = r.to ?? cW / 2;
       }
       if (r.shoulder == null && d.shoulder >= 0) r.shoulder = d.shoulder;
     });
@@ -340,7 +340,7 @@ const Diagram = (() => {
           });
         } else {
           // Point signals (stopSign, etc.) — single position at corner
-          const gap = sig.gap ?? 18;
+          const gap = sig.gap ?? 15;
           if (approach === 'north') {
             sig.x = sig.x ?? cx - g.halfH + g.vShoulder - gap;
             sig.y = sig.y ?? cy - g.halfW - gap;
@@ -367,18 +367,11 @@ const Diagram = (() => {
     const H = cfg.canvas.height;
     const svg = SVG.create(container, W, H);
 
-    // Zoom via viewBox — scales everything proportionally (line widths, text, etc.)
+    // ViewBox centered on origin — (0,0) is always canvas center.
+    // Zoom scales proportionally around the center.
     const z = rawCfg.zoom || 1;
-    if (z !== 1) {
-      const vbW = W / z, vbH = H / z;
-      const origin = rawCfg.zoomOrigin || 'origin';
-      let vbX = 0, vbY = 0;
-      if (origin === 'center') {
-        vbX = (W - vbW) / 2;
-        vbY = (H - vbH) / 2;
-      }
-      svg.setAttribute('viewBox', `${vbX} ${vbY} ${vbW} ${vbH}`);
-    }
+    const vbW = W / z, vbH = H / z;
+    svg.setAttribute('viewBox', `${-vbW / 2} ${-vbH / 2} ${vbW} ${vbH}`);
 
     // Build road lookup
     const roadMap = {};
@@ -399,10 +392,8 @@ const Diagram = (() => {
       return { ...ix, cx, cy, halfH, halfW };
     });
 
-    // 1. Background — fill the visible area with grass
-    //    When zoomed, the viewBox shows a sub-region, so we fill the full canvas
-    //    to ensure coverage regardless of zoom origin.
-    Terrain.fillArea(svg, 0, 0, W, H);
+    // 1. Background — fill the full canvas with grass (centered on origin)
+    Terrain.fillArea(svg, -W / 2, -H / 2, W, H);
 
     // 2. Roads
     (cfg.roads || []).forEach(r => {
@@ -540,6 +531,16 @@ const Diagram = (() => {
     (cfg.decorations || []).forEach(d => {
       if (d.type === 'compass') Compass.draw(svg, d.x, d.y, d.size);
     });
+
+    // 10. Compass rose — always bottom-right, zoom-independent
+    if (cfg.compass !== false) {
+      const comp = cfg.compass || {};
+      const size = (comp.size ?? 30) / z;
+      const margin = (comp.margin ?? 50) / z;
+      const ccx = comp.x ?? (vbW / 2 - margin);
+      const ccy = comp.y ?? (vbH / 2 - margin);
+      Compass.draw(svg, ccx, ccy, size);
+    }
 
     return svg;
   }

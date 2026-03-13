@@ -2,20 +2,19 @@
   "title": "4-Way Intersection with 4 Traffic Lights (Zoomed 2:1)",
 
   "zoom": 2,
-  "zoomOrigin": "center",
 
   "roads": [
     {
       "id": "vertical",
       "orientation": "vertical",
-      "center": 408,
+      "center": 0,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     },
     {
       "id": "horizontal",
       "orientation": "horizontal",
-      "center": 528,
+      "center": 0,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     }

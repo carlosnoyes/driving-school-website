@@ -3,13 +3,13 @@
 
   "parkingLots": [
     {
-      "x": 0,
-      "y": 0,
-      "edgeMargin": "far",
+      "x": -528,
+      "y": -408,
+      "edgeMargin": "close",
       "rows": [
-        { "type": "single", "orientation": "vertical", "stallsPerColumn": 18, "direction": "left" },
-        { "type": "double", "orientation": "vertical", "stallsPerColumn": 18 },
-        { "type": "double", "orientation": "vertical", "stallsPerColumn": 18 }
+        { "type": "single", "orientation": "vertical", "stallsPerColumn": 14, "direction": "left" },
+        { "type": "double", "orientation": "vertical", "stallsPerColumn": 14 },
+        { "type": "double", "orientation": "vertical", "stallsPerColumn": 14 }
       ]
     }
   ]

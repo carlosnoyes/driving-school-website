@@ -5,14 +5,14 @@
     {
       "id": "vertical",
       "orientation": "vertical",
-      "center": 408,
+      "center": 0,
       "laneLine": "none",
       "centerLineStyle": "none"
     },
     {
       "id": "horizontal",
       "orientation": "horizontal",
-      "center": 528,
+      "center": 0,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     }
@@ -28,8 +28,8 @@
         { "approach": "south" }
       ],
       "signals": [
-        { "approach": "north", "type": "stopSign", "scale": 1.2 },
-        { "approach": "south", "type": "stopSign", "scale": 1.2 }
+        { "approach": "north", "type": "stopSign" },
+        { "approach": "south", "type": "stopSign" }
       ]
     }
   ]

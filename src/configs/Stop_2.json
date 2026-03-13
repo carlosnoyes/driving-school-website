@@ -5,14 +5,14 @@
     {
       "id": "vertical",
       "orientation": "vertical",
-      "center": 408,
+      "center": 0,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     },
     {
       "id": "horizontal",
       "orientation": "horizontal",
-      "center": 528,
+      "center": 0,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     }
@@ -30,10 +30,10 @@
         { "approach": "west" }
       ],
       "signals": [
-        { "approach": "north", "type": "stopSign", "scale": 1.2 },
-        { "approach": "south", "type": "stopSign", "scale": 1.2 },
-        { "approach": "east", "type": "stopSign", "scale": 1.2 },
-        { "approach": "west", "type": "stopSign", "scale": 1.2 }
+        { "approach": "north", "type": "stopSign" },
+        { "approach": "south", "type": "stopSign" },
+        { "approach": "east", "type": "stopSign" },
+        { "approach": "west", "type": "stopSign" }
       ]
     }
   ]

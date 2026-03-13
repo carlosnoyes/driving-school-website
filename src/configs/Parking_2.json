@@ -5,16 +5,16 @@
     {
       "id": "street",
       "orientation": "vertical",
-      "center": 86,
+      "center": -442,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     },
     {
       "id": "sidestreet",
       "orientation": "horizontal",
-      "center": 528,
-      "from": 146,
-      "to": 176,
+      "center": 0,
+      "from": -382,
+      "to": -352,
       "laneLine": "none",
       "centerLineStyle": "none"
     }
@@ -33,13 +33,12 @@
     {
       "road": "sidestreet",
       "side": "east",
-      "entrance": 2,
+      "entrance": 1,
       "edgeMargin": "close",
       "rows": [
-        { "type": "single", "stallsPerRow": 12, "direction": "up" },
-        { "type": "double", "stallsPerRow": 10, "splits": [5] },
-        { "type": "double", "stallsPerRow": 10, "splits": [5] },
-        { "type": "single", "stallsPerRow": 12, "direction": "down" }
+        { "type": "double", "orientation": "vertical", "stallsPerColumn": 10, "splits": [5] },
+        { "type": "double", "orientation": "vertical", "stallsPerColumn": 10, "splits": [5] },
+        { "type": "single", "orientation": "vertical", "stallsPerColumn": 12, "direction": "right" }
       ]
     }
   ]
