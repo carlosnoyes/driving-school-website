@@ -1,0 +1,69 @@
+{
+  "title": "Parking Lot with Cars",
+
+  "roads": [
+    {
+      "id": "street",
+      "orientation": "vertical",
+      "center": 86,
+      "laneLine": "none",
+      "centerLineStyle": "dashed-yellow",
+      "shoulder": 10
+    },
+    {
+      "id": "sidestreet",
+      "orientation": "horizontal",
+      "center": 370,
+      "from": 146,
+      "to": 176,
+      "laneLine": "none",
+      "centerLineStyle": "none",
+      "shoulder": 10
+    }
+  ],
+
+  "intersections": [
+    {
+      "id": "tee",
+      "type": "tJunction",
+      "blockedSide": "west",
+      "roads": ["street", "sidestreet"]
+    }
+  ],
+
+  "parkingLots": [
+    {
+      "x": 176,
+      "y": 60,
+      "width": 600,
+      "height": 820,
+      "rows": [
+        { "type": "double", "x": 206, "y": 120, "stallsPerRow": 10 },
+        { "type": "double", "x": 206, "y": 420, "stallsPerRow": 10 },
+        { "type": "single", "x": 206, "y": 720, "stallsPerRow": 10, "direction": "down" }
+      ]
+    }
+  ],
+
+  "vehicles": [
+    { "road": "street", "side": "left",  "t": 0.15, "color": "white", "size": "small" },
+    { "road": "street", "side": "right", "t": 0.40, "color": "blue",  "size": "large" },
+    { "road": "street", "side": "left",  "t": 0.75, "color": "red",   "size": "medium" },
+
+    { "parkingLot": 0, "row": 0, "stall": 0, "subRow": "top",    "color": "white",  "size": "large" },
+    { "parkingLot": 0, "row": 0, "stall": 3, "subRow": "top",    "color": "blue",   "size": "medium" },
+    { "parkingLot": 0, "row": 0, "stall": 7, "subRow": "top",    "color": "red",    "size": "small" },
+    { "parkingLot": 0, "row": 0, "stall": 4, "subRow": "bottom", "color": "green",  "size": "small" },
+    { "parkingLot": 0, "row": 0, "stall": 9, "subRow": "bottom", "color": "orange", "size": "large" },
+    { "parkingLot": 0, "row": 1, "stall": 2, "subRow": "top",    "color": "yellow", "size": "large" },
+    { "parkingLot": 0, "row": 1, "stall": 5, "subRow": "top",    "color": "gray",   "size": "medium" },
+    { "parkingLot": 0, "row": 1, "stall": 8, "subRow": "bottom", "color": "black",  "size": "large" },
+    { "parkingLot": 0, "row": 1, "stall": 1, "subRow": "bottom", "color": "red",    "size": "medium" },
+    { "parkingLot": 0, "row": 2, "stall": 3, "color": "blue",    "size": "small" },
+    { "parkingLot": 0, "row": 2, "stall": 6, "color": "white",   "size": "medium" },
+
+    { "x": 125, "y": 360, "direction": "north", "rotation": 50, "color": "green", "size": "medium" },
+
+    { "x": 400, "y": 670, "direction": "east", "color": "yellow", "size": "large" }
+  ]
+}

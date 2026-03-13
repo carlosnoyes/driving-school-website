@@ -13,9 +13,9 @@
     {
       "id": "sidestreet",
       "orientation": "horizontal",
-      "center": 506,
+      "center": 370,
       "from": 146,
-      "to": 266,
+      "to": 176,
       "laneLine": "none",
       "centerLineStyle": "none",
       "shoulder": 10
@@ -33,15 +33,14 @@
 
   "parkingLots": [
     {
-      "x": 266,
+      "x": 176,
       "y": 60,
-      "width": 510,
-      "height": 936,
+      "width": 600,
+      "height": 820,
       "rows": [
-        { "type": "double", "x": 296, "y": 119, "stallsPerRow": 9 },
-        { "type": "double", "x": 296, "y": 378, "stallsPerRow": 9 },
-        { "type": "double", "x": 296, "y": 637, "stallsPerRow": 9 },
-        { "type": "single", "x": 296, "y": 896, "stallsPerRow": 9, "direction": "down" }
+        { "type": "double", "x": 206, "y": 120, "stallsPerRow": 10 },
+        { "type": "double", "x": 206, "y": 420, "stallsPerRow": 10 },
+        { "type": "single", "x": 206, "y": 720, "stallsPerRow": 10, "direction": "down" }
       ]
     }
   ]

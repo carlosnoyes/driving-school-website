@@ -488,6 +488,7 @@ const Vehicles = (() => {
     const w = (dir === 'north' || dir === 'south') ? cw : ch;
     const h = (dir === 'north' || dir === 'south') ? ch : cw;
     SVG.rect(g, cx - w / 2, cy - h / 2, w, h, { fill: color, stroke: '#555', 'stroke-width': 1.5, rx: 5, ry: 5 });
+    if (opts.rotation) g.setAttribute('transform', `rotate(${opts.rotation}, ${cx}, ${cy})`);
     return g;
   }
 

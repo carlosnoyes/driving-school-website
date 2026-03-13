@@ -1,0 +1,47 @@
+{
+  "title": "4-Way All-Way Stop (Zoomed 2:1)",
+
+  "zoom": 2,
+  "zoomOrigin": "center",
+
+  "roads": [
+    {
+      "id": "vertical",
+      "orientation": "vertical",
+      "center": 408,
+      "laneLine": "none",
+      "centerLineStyle": "double-yellow",
+      "shoulder": 10
+    },
+    {
+      "id": "horizontal",
+      "orientation": "horizontal",
+      "center": 528,
+      "laneLine": "none",
+      "centerLineStyle": "double-yellow",
+      "shoulder": 10
+    }
+  ],
+
+  "intersections": [
+    {
+      "id": "main",
+      "type": "fourWay",
+      "roads": ["vertical", "horizontal"]
+    }
+  ],
+
+  "signals": [
+    { "id": "stop-north", "type": "stopSign", "intersection": "main", "approach": "north", "scale": 1.2 },
+    { "id": "stop-south", "type": "stopSign", "intersection": "main", "approach": "south", "scale": 1.2 },
+    { "id": "stop-east", "type": "stopSign", "intersection": "main", "approach": "east", "scale": 1.2 },
+    { "id": "stop-west", "type": "stopSign", "intersection": "main", "approach": "west", "scale": 1.2 }
+  ],
+
+  "stopLines": [
+    { "signal": "stop-north" },
+    { "signal": "stop-south" },
+    { "signal": "stop-east" },
+    { "signal": "stop-west" }
+  ]
+}

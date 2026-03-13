@@ -12,8 +12,15 @@ const Diagram = (() => {
     radius: 25,
     stallWidth: 50,
     stallDepth: 100,
-    vehicleWidth: 22,
-    vehicleHeight: 36,
+    vehicleWidth: 30,      // 0.6 × laneWidth
+    vehicleHeight: 75,     // 1.5 × laneWidth (medium)
+  };
+
+  // Vehicle sizes: width is always 0.6 × laneWidth, length varies
+  const VEHICLE_SIZES = {
+    small:  { width: 30, height: 60 },   // 1.2 × laneWidth
+    medium: { width: 30, height: 75 },   // 1.5 × laneWidth
+    large:  { width: 30, height: 90 },   // 1.8 × laneWidth
   };
 
   /**
@@ -26,50 +33,35 @@ const Diagram = (() => {
    */
   function applyDefaults(raw) {
     const d = { ...DEFAULTS, ...(raw.defaults || {}) };
-    const z = raw.zoom || 1;
-
-    // Helper: scale a number by zoom
-    const s = v => (v != null ? v * z : v);
-    // Helper: scale, falling back to a default
-    const sd = (v, def) => s(v != null ? v : def);
 
     // Deep-clone to avoid mutating the original
     const cfg = JSON.parse(JSON.stringify(raw));
 
-    // Scale canvas
-    if (cfg.canvas) {
-      cfg.canvas.width = s(cfg.canvas.width) || 816 * z;
-      cfg.canvas.height = s(cfg.canvas.height) || 1056 * z;
-    }
-
-    // Canvas dimensions (needed for road from/to defaults)
-    const cW = cfg.canvas?.width || 816;
-    const cH = cfg.canvas?.height || 1056;
+    // Canvas
+    cfg.canvas = cfg.canvas || {};
+    cfg.canvas.width = cfg.canvas.width || 816;
+    cfg.canvas.height = cfg.canvas.height || 1056;
+    const cW = cfg.canvas.width;
+    const cH = cfg.canvas.height;
 
     // Roads
     (cfg.roads || []).forEach(r => {
-      r.laneWidth = sd(r.laneWidth, d.laneWidth);
-      r.center = s(r.center);
-      // Default from/to: span the full canvas
+      r.laneWidth = r.laneWidth ?? d.laneWidth;
       if (r.orientation === 'vertical') {
-        r.from = s(r.from != null ? r.from : 0);
-        r.to = s(r.to != null ? r.to : cH);
+        r.from = r.from ?? 0;
+        r.to = r.to ?? cH;
       } else {
-        r.from = s(r.from != null ? r.from : 0);
-        r.to = s(r.to != null ? r.to : cW);
+        r.from = r.from ?? 0;
+        r.to = r.to ?? cW;
       }
-      if (r.shoulder != null && r.shoulder >= 0) r.shoulder = s(r.shoulder);
-      else if (d.shoulder >= 0) r.shoulder = s(d.shoulder);
-      if (r.median != null) r.median = s(r.median);
+      if (r.shoulder == null && d.shoulder >= 0) r.shoulder = d.shoulder;
     });
 
     // Intersections — derive center from roads if not explicit
     const roadLookup = {};
     (cfg.roads || []).forEach(r => { roadLookup[r.id] = r; });
     (cfg.intersections || []).forEach(ix => {
-      if (ix.center) {
-        ix.center = ix.center.map(v => s(v));
-      } else if (ix.roads && ix.roads.length >= 2) {
+      if (!ix.center && ix.roads && ix.roads.length >= 2) {
         const r0 = roadLookup[ix.roads[0]];
         const r1 = roadLookup[ix.roads[1]];
         if (r0 && r1) {
@@ -78,58 +70,43 @@ const Diagram = (() => {
           ix.center = [vRoad.center, hRoad.center];
         }
       }
-      ix.radius = sd(ix.radius, d.radius);
+      ix.radius = ix.radius ?? d.radius;
     });
 
     // Parking lots
     (cfg.parkingLots || []).forEach(lot => {
-      lot.x = s(lot.x); lot.y = s(lot.y);
-      lot.width = s(lot.width); lot.height = s(lot.height);
       (lot.rows || []).forEach(row => {
-        if (row.x != null) row.x = s(row.x);
-        if (row.y != null) row.y = s(row.y);
-        if (row.offsetX != null) row.offsetX = s(row.offsetX);
-        if (row.offsetY != null) row.offsetY = s(row.offsetY);
-        row.stallWidth = sd(row.stallWidth, d.stallWidth);
-        row.stallDepth = sd(row.stallDepth, d.stallDepth);
+        row.stallWidth = row.stallWidth ?? d.stallWidth;
+        row.stallDepth = row.stallDepth ?? d.stallDepth;
       });
-    });
-
-    // Connectors
-    (cfg.connectors || []).forEach(c => {
-      c.x = s(c.x); c.y = s(c.y);
-      c.width = s(c.width); c.height = s(c.height);
     });
 
     // Entrances — derive center, shoulder, radius from linked road
     (cfg.entrances || []).forEach(ent => {
       const road = ent.road ? roadLookup[ent.road] : null;
       if (ent.center && Array.isArray(ent.center)) {
-        // Legacy [x, y] format — scale both
-        ent.center = ent.center.map(v => s(v));
+        // Already [x, y] — keep as-is
       } else if (road) {
-        // Single number = position along the road; derive full center from road
-        const pos = s(ent.position != null ? ent.position : (ent.center != null ? ent.center : 0));
+        const pos = ent.position ?? ent.center ?? 0;
         if (road.orientation === 'vertical') {
           ent.center = [road.center, pos];
         } else {
           ent.center = [pos, road.center];
         }
       }
-      if (ent.halfWidth != null) ent.halfWidth = s(ent.halfWidth);
-      // Default radius and shoulder from road
-      if (ent.radius != null) ent.radius = s(ent.radius);
-      else if (road) ent.radius = road.shoulder != null && road.shoulder >= 0 ? road.shoulder : d.radius;
-      if (ent.shoulder != null) ent.shoulder = s(ent.shoulder);
-      else if (road && road.shoulder != null && road.shoulder >= 0) ent.shoulder = road.shoulder;
+      if (ent.radius == null && road) {
+        ent.radius = road.shoulder != null && road.shoulder >= 0 ? road.shoulder : d.radius;
+      }
+      if (ent.shoulder == null && road && road.shoulder != null && road.shoulder >= 0) {
+        ent.shoulder = road.shoulder;
+      }
     });
 
-    // Vehicles
+    // Vehicles — resolve size preset, then fill defaults
     (cfg.vehicles || []).forEach(v => {
-      if (v.x != null) v.x = s(v.x);
-      if (v.y != null) v.y = s(v.y);
-      v.width = sd(v.width, d.vehicleWidth);
-      v.height = sd(v.height, d.vehicleHeight);
+      const sz = v.size ? (VEHICLE_SIZES[v.size] || VEHICLE_SIZES.medium) : VEHICLE_SIZES.medium;
+      v.width = v.width ?? sz.width;
+      v.height = v.height ?? sz.height;
     });
 
     // Build intersection lookup (for signal/stopLine derivation)
@@ -156,91 +133,66 @@ const Diagram = (() => {
     }
 
     // Signals — derive position from intersection + approach if not explicit
-    // (x, y) = pole base. Sign placed just outside the intersection on the
-    // approaching-lane side, outside the shoulder.
     const sigLookup = {};
     (cfg.signals || []).forEach(sig => {
       const ix = sig.intersection ? ixLookup[sig.intersection] : null;
       if (ix && sig.approach && ix.center) {
         const g = ixGeom(ix);
         if (!g) return;
-        const gap = s(sig.gap != null ? sig.gap : 18);
+        const gap = sig.gap ?? 18;
         const cx = ix.center[0], cy = ix.center[1];
         if (sig.approach === 'north') {
-          // Going south — sign on west side of road, above intersection
-          sig.x = sig.x != null ? s(sig.x) : cx - g.halfH + g.vShoulder - gap;
-          sig.y = sig.y != null ? s(sig.y) : cy - g.halfW - gap;
+          sig.x = sig.x ?? cx - g.halfH + g.vShoulder - gap;
+          sig.y = sig.y ?? cy - g.halfW - gap;
         } else if (sig.approach === 'south') {
-          // Going north — sign on east side of road, below intersection
-          sig.x = sig.x != null ? s(sig.x) : cx + g.halfH - g.vShoulder + gap;
-          sig.y = sig.y != null ? s(sig.y) : cy + g.halfW + gap;
+          sig.x = sig.x ?? cx + g.halfH - g.vShoulder + gap;
+          sig.y = sig.y ?? cy + g.halfW + gap;
         } else if (sig.approach === 'east') {
-          // Going west — sign on north side of road, right of intersection
-          sig.x = sig.x != null ? s(sig.x) : cx + g.halfH + gap;
-          sig.y = sig.y != null ? s(sig.y) : cy - g.halfW + g.hShoulder - gap;
+          sig.x = sig.x ?? cx + g.halfH + gap;
+          sig.y = sig.y ?? cy - g.halfW + g.hShoulder - gap;
         } else if (sig.approach === 'west') {
-          // Going east — sign on south side of road, left of intersection
-          sig.x = sig.x != null ? s(sig.x) : cx - g.halfH - gap;
-          sig.y = sig.y != null ? s(sig.y) : cy + g.halfW - g.hShoulder + gap;
+          sig.x = sig.x ?? cx - g.halfH - gap;
+          sig.y = sig.y ?? cy + g.halfW - g.hShoulder + gap;
         }
-      } else {
-        if (sig.x != null) sig.x = s(sig.x);
-        if (sig.y != null) sig.y = s(sig.y);
       }
       if (sig.id) sigLookup[sig.id] = sig;
     });
 
     // Stop lines — derive from signal's intersection + approach if not explicit
-    // Line spans from inner shoulder edge to the center of the road
     (cfg.stopLines || []).forEach(sl => {
       const sig = sl.signal ? sigLookup[sl.signal] : null;
       const ix = sig?.intersection ? ixLookup[sig.intersection] : null;
       if (ix && sig?.approach && ix.center) {
         const g = ixGeom(ix);
         if (!g) return;
-        const offset = s(sl.offset != null ? sl.offset : 15);
+        const offset = sl.offset ?? 15;
         const cx = ix.center[0], cy = ix.center[1];
         if (sig.approach === 'north') {
-          // Horizontal line above intersection, spanning west approaching lanes
-          // From inner shoulder (cx - halfH + vShoulder) to center (cx)
           const ly = cy - g.halfW - offset;
-          sl.x1 = sl.x1 != null ? s(sl.x1) : cx - g.halfH + g.vShoulder;
-          sl.y1 = sl.y1 != null ? s(sl.y1) : ly;
-          sl.x2 = sl.x2 != null ? s(sl.x2) : cx;
-          sl.y2 = sl.y2 != null ? s(sl.y2) : ly;
+          sl.x1 = sl.x1 ?? cx - g.halfH + g.vShoulder;
+          sl.y1 = sl.y1 ?? ly;
+          sl.x2 = sl.x2 ?? cx;
+          sl.y2 = sl.y2 ?? ly;
         } else if (sig.approach === 'south') {
           const ly = cy + g.halfW + offset;
-          sl.x1 = sl.x1 != null ? s(sl.x1) : cx;
-          sl.y1 = sl.y1 != null ? s(sl.y1) : ly;
-          sl.x2 = sl.x2 != null ? s(sl.x2) : cx + g.halfH - g.vShoulder;
-          sl.y2 = sl.y2 != null ? s(sl.y2) : ly;
+          sl.x1 = sl.x1 ?? cx;
+          sl.y1 = sl.y1 ?? ly;
+          sl.x2 = sl.x2 ?? cx + g.halfH - g.vShoulder;
+          sl.y2 = sl.y2 ?? ly;
         } else if (sig.approach === 'east') {
           const lx = cx + g.halfH + offset;
-          sl.x1 = sl.x1 != null ? s(sl.x1) : lx;
-          sl.y1 = sl.y1 != null ? s(sl.y1) : cy - g.halfW + g.hShoulder;
-          sl.x2 = sl.x2 != null ? s(sl.x2) : lx;
-          sl.y2 = sl.y2 != null ? s(sl.y2) : cy;
+          sl.x1 = sl.x1 ?? lx;
+          sl.y1 = sl.y1 ?? cy - g.halfW + g.hShoulder;
+          sl.x2 = sl.x2 ?? lx;
+          sl.y2 = sl.y2 ?? cy;
         } else if (sig.approach === 'west') {
           const lx = cx - g.halfH - offset;
-          sl.x1 = sl.x1 != null ? s(sl.x1) : lx;
-          sl.y1 = sl.y1 != null ? s(sl.y1) : cy;
-          sl.x2 = sl.x2 != null ? s(sl.x2) : lx;
-          sl.y2 = sl.y2 != null ? s(sl.y2) : cy + g.halfW - g.hShoulder;
+          sl.x1 = sl.x1 ?? lx;
+          sl.y1 = sl.y1 ?? cy;
+          sl.x2 = sl.x2 ?? lx;
+          sl.y2 = sl.y2 ?? cy + g.halfW - g.hShoulder;
         }
-      } else {
-        if (sl.x1 != null) sl.x1 = s(sl.x1);
-        if (sl.y1 != null) sl.y1 = s(sl.y1);
-        if (sl.x2 != null) sl.x2 = s(sl.x2);
-        if (sl.y2 != null) sl.y2 = s(sl.y2);
       }
-      if (sl.width != null) sl.width = s(sl.width);
-    });
-
-    // Decorations
-    (cfg.decorations || []).forEach(dec => {
-      if (dec.x != null) dec.x = s(dec.x);
-      if (dec.y != null) dec.y = s(dec.y);
-      if (dec.size != null) dec.size = s(dec.size);
     });
 
     return cfg;
@@ -248,9 +200,22 @@ const Diagram = (() => {
 
   function render(container, rawCfg) {
     const cfg = applyDefaults(rawCfg);
-    const W = cfg.canvas?.width || 816;
-    const H = cfg.canvas?.height || 1056;
+    const W = cfg.canvas.width;
+    const H = cfg.canvas.height;
     const svg = SVG.create(container, W, H);
+
+    // Zoom via viewBox — scales everything proportionally (line widths, text, etc.)
+    const z = rawCfg.zoom || 1;
+    if (z !== 1) {
+      const vbW = W / z, vbH = H / z;
+      const origin = rawCfg.zoomOrigin || 'origin';
+      let vbX = 0, vbY = 0;
+      if (origin === 'center') {
+        vbX = (W - vbW) / 2;
+        vbY = (H - vbH) / 2;
+      }
+      svg.setAttribute('viewBox', `${vbX} ${vbY} ${vbW} ${vbH}`);
+    }
 
     // Build road lookup
     const roadMap = {};
@@ -271,7 +236,9 @@ const Diagram = (() => {
       return { ...ix, cx, cy, halfH, halfW };
     });
 
-    // 1. Background — always full-canvas grass, everything else layers on top
+    // 1. Background — fill the visible area with grass
+    //    When zoomed, the viewBox shows a sub-region, so we fill the full canvas
+    //    to ensure coverage regardless of zoom origin.
     Terrain.fillArea(svg, 0, 0, W, H);
 
     // 2. Roads
@@ -373,14 +340,7 @@ const Diagram = (() => {
 
     });
 
-    // 7. Signals
-    (cfg.signals || []).forEach(s => {
-      if (s.type === 'stopSign') Signals.stopSign(svg, s.x, s.y, s);
-      else if (s.type === 'trafficLight') Signals.trafficLight(svg, s.x, s.y, s);
-      else if (s.type === 'laneArrow') Signals.laneArrow(svg, s.x, s.y, s.direction, s);
-    });
-
-    // 7b. Stop lines (solid white lines across lanes)
+    // 7. Stop lines (solid white lines across lanes)
     (cfg.stopLines || []).forEach(sl => {
       SVG.line(svg, sl.x1, sl.y1, sl.x2, sl.y2, {
         stroke: sl.color || '#fff',
@@ -388,10 +348,19 @@ const Diagram = (() => {
       });
     });
 
+    // 7b. Signals (rendered after stop lines so signs layer on top)
+    (cfg.signals || []).forEach(s => {
+      if (s.type === 'stopSign') Signals.stopSign(svg, s.x, s.y, s);
+      else if (s.type === 'trafficLight') Signals.trafficLight(svg, s.x, s.y, s);
+      else if (s.type === 'laneArrow') Signals.laneArrow(svg, s.x, s.y, s.direction, s);
+    });
+
     // 8. Vehicles
     (cfg.vehicles || []).forEach(v => {
       if (v.road) {
         renderLaneVehicle(svg, v, roadMap, junctions);
+      } else if (v.parkingLot != null) {
+        renderStallVehicle(svg, v, cfg);
       } else {
         Vehicles.car(svg, v.x, v.y, v);
       }
@@ -458,8 +427,8 @@ const Diagram = (() => {
     const halfRoad = (lw * lpd * 2) / 2;
     const t = v.t || 0.5;
     const lane = v.lane || 0;
-    const carW = v.width || DEFAULTS.vehicleWidth;
-    const carH = v.height || DEFAULTS.vehicleHeight;
+    const carW = v.width;
+    const carH = v.height;
 
     // Find the junction this arm belongs to
     let jx = null;
@@ -523,7 +492,72 @@ const Diagram = (() => {
       }
     }
 
-    Vehicles.car(svg, cx, cy, { direction, color: v.color, width: carW, height: carH });
+    Vehicles.car(svg, cx, cy, { direction, color: v.color, width: carW, height: carH, rotation: v.rotation });
+  }
+
+  /* ── Parking-stall vehicle placement ── */
+  function renderStallVehicle(svg, v, cfg) {
+    const lot = (cfg.parkingLots || [])[v.parkingLot];
+    if (!lot) return;
+    const row = (lot.rows || [])[v.row ?? 0];
+    if (!row) return;
+
+    const sw = row.stallWidth ?? Parking.D.stallWidth;
+    const sd = row.stallDepth ?? Parking.D.stallDepth;
+    const rx = row.x ?? lot.x + (row.offsetX || 0);
+    const ry = row.y ?? lot.y + (row.offsetY || 0);
+    const stallIdx = v.stall ?? 0;
+    const isVertical = row.orientation === 'vertical';
+    const carH = v.height;
+
+    // Nose-alignment offset: shift car so noses align at the medium-car reference depth.
+    // Positive pullSign = nose points toward increasing coordinate.
+    const medH = VEHICLE_SIZES.medium.height;
+    const pullDelta = (medH - carH) / 2;
+
+    let cx, cy, direction;
+
+    if (isVertical) {
+      cy = ry + stallIdx * sw + sw / 2;
+      if (row.type === 'double') {
+        if ((v.subRow || 'left') === 'left') {
+          cx = rx + sd / 2;
+          direction = 'east';
+        } else {
+          cx = rx + sd + sd / 2;
+          direction = 'west';
+        }
+      } else {
+        cx = rx + sd / 2;
+        direction = (row.direction === 'right') ? 'east' : 'west';
+      }
+      // Apply pull-in offset along x axis
+      cx += (direction === 'east' ? pullDelta : -pullDelta);
+    } else {
+      cx = rx + stallIdx * sw + sw / 2;
+      if (row.type === 'double') {
+        if ((v.subRow || 'top') === 'top') {
+          cy = ry + sd / 2;
+          direction = 'south';
+        } else {
+          cy = ry + sd + sd / 2;
+          direction = 'north';
+        }
+      } else {
+        cy = ry + sd / 2;
+        direction = (row.direction === 'down') ? 'south' : 'north';
+      }
+      // Apply pull-in offset along y axis
+      cy += (direction === 'south' ? pullDelta : -pullDelta);
+    }
+
+    Vehicles.car(svg, cx, cy, {
+      direction: v.direction || direction,
+      color: v.color,
+      width: v.width,
+      height: v.height,
+      rotation: v.rotation,
+    });
   }
 
   /* ── Export as PNG ── */
