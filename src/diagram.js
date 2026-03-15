@@ -193,11 +193,11 @@ const Diagram = (() => {
       r.to = resolveRef(r.to, r.orientation, roadLookup, 'along');
       r.laneWidth = r.laneWidth ?? d.laneWidth;
       if (r.orientation === 'vertical') {
-        r.from = r.from ?? -cH / 2;
-        r.to = r.to ?? cH / 2;
+        r.from = r.from ?? 0;
+        r.to = r.to ?? cH;
       } else {
-        r.from = r.from ?? -cW / 2;
-        r.to = r.to ?? cW / 2;
+        r.from = r.from ?? 0;
+        r.to = r.to ?? cW;
       }
       if (r.shoulder == null && d.shoulder >= 0) r.shoulder = d.shoulder;
       roadLookup[r.id] = r;
@@ -367,11 +367,10 @@ const Diagram = (() => {
     const H = cfg.canvas.height;
     const svg = SVG.create(container, W, H);
 
-    // ViewBox centered on origin — (0,0) is always canvas center.
-    // Zoom scales proportionally around the center.
+    // ViewBox: (0,0) is the top-left corner of the canvas.
     const z = rawCfg.zoom || 1;
     const vbW = W / z, vbH = H / z;
-    svg.setAttribute('viewBox', `${-vbW / 2} ${-vbH / 2} ${vbW} ${vbH}`);
+    svg.setAttribute('viewBox', `0 0 ${vbW} ${vbH}`);
 
     // Build road lookup
     const roadMap = {};
@@ -392,8 +391,8 @@ const Diagram = (() => {
       return { ...ix, cx, cy, halfH, halfW };
     });
 
-    // 1. Background — fill the full canvas with grass (centered on origin)
-    Terrain.fillArea(svg, -W / 2, -H / 2, W, H);
+    // 1. Background — fill the full canvas with grass
+    Terrain.fillArea(svg, 0, 0, W, H);
 
     // 2. Roads
     (cfg.roads || []).forEach(r => {
@@ -536,8 +535,8 @@ const Diagram = (() => {
       const comp = cfg.compass || {};
       const size = (comp.size ?? 30) / z;
       const margin = (comp.margin ?? 50) / z;
-      const ccx = comp.x ?? (vbW / 2 - margin);
-      const ccy = comp.y ?? (vbH / 2 - margin);
+      const ccx = comp.x ?? (vbW - margin);
+      const ccy = comp.y ?? (vbH - margin);
       Compass.draw(svg, ccx, ccy, size);
     }
 

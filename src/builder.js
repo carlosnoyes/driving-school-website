@@ -30,6 +30,8 @@
     },
     selected: null,   // { type, index }
     mode: 'select',   // 'select' | 'addRoad' | 'addLot' | 'addVehicle'
+    uiZoom: 1,        // builder viewport zoom (CSS scale, separate from config.zoom)
+    showGrid: false,  // show canvas cell borders
     undoStack: [],
     redoStack: [],
     nextId: { road: 1, lot: 1, vehicle: 1 },
@@ -133,8 +135,33 @@
       svg.style.pointerEvents = 'none';
       buildOverlay(svg);
     }
+    fitCanvas();
     refreshElementList();
     refreshProps();
+  }
+
+  /** Scale canvas-inner to fit the wrapper, applying zoom on top. */
+  function fitCanvas() {
+    const wrapper = document.getElementById('canvas-wrapper');
+    const inner = document.getElementById('canvas-inner');
+    const svg = document.querySelector('#diagram-container svg');
+    if (!wrapper || !inner || !svg) return;
+
+    const svgW = parseFloat(svg.getAttribute('width')) || state.config.canvas.width;
+    const svgH = parseFloat(svg.getAttribute('height')) || state.config.canvas.height;
+    const wrapW = wrapper.clientWidth;
+    const wrapH = wrapper.clientHeight;
+
+    // Base scale: fit diagram into wrapper
+    const baseScale = Math.min(wrapW / svgW, wrapH / svgH, 1);
+    const zoom = state.uiZoom || 1;
+    const scale = baseScale * zoom;
+
+    inner.style.transform = 'scale(' + scale + ')';
+    inner.style.transformOrigin = 'center center';
+
+    // Allow scrolling when zoomed past the wrapper bounds
+    wrapper.style.overflow = (scale * svgW > wrapW || scale * svgH > wrapH) ? 'auto' : 'hidden';
   }
 
   /* ================================================================
@@ -157,12 +184,12 @@
       const hw = roadHalfWidth(r);
       let x, y, w, h;
       if (r.orientation === 'vertical') {
-        const from = r.from ?? -cH / 2;
-        const to   = r.to   ??  cH / 2;
+        const from = r.from ?? 0;
+        const to   = r.to   ?? cH;
         x = r.center - hw; y = from; w = hw * 2; h = to - from;
       } else {
-        const from = r.from ?? -cW / 2;
-        const to   = r.to   ??  cW / 2;
+        const from = r.from ?? 0;
+        const to   = r.to   ?? cW;
         x = from; y = r.center - hw; w = to - from; h = hw * 2;
       }
       ov.appendChild(hitRect(x, y, w, h, 'road', i));
@@ -203,9 +230,45 @@
       const z = cfg.zoom || 1;
       const vbW = cW / z, vbH = cH / z;
       const comp = cfg.compass || {};
-      const cx = comp.x ?? (vbW / 2 - (comp.margin ?? 50) / z);
-      const cy = comp.y ?? (vbH / 2 - (comp.margin ?? 50) / z);
+      const cx = comp.x ?? (vbW - (comp.margin ?? 50) / z);
+      const cy = comp.y ?? (vbH - (comp.margin ?? 50) / z);
       ov.appendChild(hitRect(cx - 35, cy - 35, 70, 70, 'compass', 0));
+    }
+
+    // — Grid lines (canvas cell borders) —
+    if (state.showGrid) {
+      const NS = 'http://www.w3.org/2000/svg';
+      const portrait = cW < cH;
+      const cellW = portrait ? BASE_H : BASE_W;
+      const cellH = portrait ? BASE_W : BASE_H;
+      const cols = Math.round(cW / cellW);
+      const rows = Math.round(cH / cellH);
+      const gridStyle = { stroke: 'rgba(255,255,255,0.4)', 'stroke-width': '2', 'stroke-dasharray': '8,4', fill: 'none' };
+      // Outer border
+      const border = document.createElementNS(NS, 'rect');
+      border.setAttribute('x', 0); border.setAttribute('y', 0);
+      border.setAttribute('width', cW); border.setAttribute('height', cH);
+      Object.entries(gridStyle).forEach(([k, v]) => border.setAttribute(k, v));
+      border.style.pointerEvents = 'none';
+      ov.appendChild(border);
+      // Vertical dividers
+      for (let c = 1; c < cols; c++) {
+        const ln = document.createElementNS(NS, 'line');
+        ln.setAttribute('x1', c * cellW); ln.setAttribute('y1', 0);
+        ln.setAttribute('x2', c * cellW); ln.setAttribute('y2', cH);
+        Object.entries(gridStyle).forEach(([k, v]) => ln.setAttribute(k, v));
+        ln.style.pointerEvents = 'none';
+        ov.appendChild(ln);
+      }
+      // Horizontal dividers
+      for (let r = 1; r < rows; r++) {
+        const ln = document.createElementNS(NS, 'line');
+        ln.setAttribute('x1', 0); ln.setAttribute('y1', r * cellH);
+        ln.setAttribute('x2', cW); ln.setAttribute('y2', r * cellH);
+        Object.entries(gridStyle).forEach(([k, v]) => ln.setAttribute(k, v));
+        ln.style.pointerEvents = 'none';
+        ov.appendChild(ln);
+      }
     }
 
     // Highlight selection
@@ -312,10 +375,10 @@
     vRoads.forEach(vr => {
       hRoads.forEach(hr => {
         const cx = vr.center, cy = hr.center;
-        const vFrom = Math.min(vr.from ?? -cH / 2, vr.to ?? cH / 2);
-        const vTo   = Math.max(vr.from ?? -cH / 2, vr.to ?? cH / 2);
-        const hFrom = Math.min(hr.from ?? -cW / 2, hr.to ?? cW / 2);
-        const hTo   = Math.max(hr.from ?? -cW / 2, hr.to ?? cW / 2);
+        const vFrom = Math.min(vr.from ?? 0, vr.to ?? cH);
+        const vTo   = Math.max(vr.from ?? 0, vr.to ?? cH);
+        const hFrom = Math.min(hr.from ?? 0, hr.to ?? cW);
+        const hTo   = Math.max(hr.from ?? 0, hr.to ?? cW);
 
         if (cx >= hFrom && cx <= hTo && cy >= vFrom && cy <= vTo) {
           const key = [vr.id, hr.id].sort().join(',');
@@ -327,10 +390,10 @@
             const tol = Math.max(vHW, hHW);
             let type = 'fourWay', blocked = null;
 
-            if (Math.abs((vr.from ?? -cH / 2) - cy) < tol)       { blocked = 'north'; type = 'tJunction'; }
-            else if (Math.abs((vr.to ?? cH / 2) - cy) < tol)     { blocked = 'south'; type = 'tJunction'; }
-            else if (Math.abs((hr.from ?? -cW / 2) - cx) < tol)  { blocked = 'west';  type = 'tJunction'; }
-            else if (Math.abs((hr.to ?? cW / 2) - cx) < tol)     { blocked = 'east';  type = 'tJunction'; }
+            if (Math.abs((vr.from ?? 0) - cy) < tol)       { blocked = 'north'; type = 'tJunction'; }
+            else if (Math.abs((vr.to ?? cH) - cy) < tol)     { blocked = 'south'; type = 'tJunction'; }
+            else if (Math.abs((hr.from ?? 0) - cx) < tol)  { blocked = 'west';  type = 'tJunction'; }
+            else if (Math.abs((hr.to ?? cW) - cx) < tol)     { blocked = 'east';  type = 'tJunction'; }
 
             const ix = {
               id: 'ix_' + vr.id + '_' + hr.id,
@@ -390,16 +453,16 @@
     let road;
     if (side === 'north') {
       road = { id: roadId, orientation: 'vertical', center: cx + pos * halfW,
-               from: -cHeight / 2, to: cy - halfH, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
+               from: 0, to: cy - halfH, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
     } else if (side === 'south') {
       road = { id: roadId, orientation: 'vertical', center: cx + pos * halfW,
-               from: cy + halfH, to: cHeight / 2, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
+               from: cy + halfH, to: cHeight, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
     } else if (side === 'west') {
       road = { id: roadId, orientation: 'horizontal', center: cy + pos * halfH,
-               from: -cWidth / 2, to: cx - halfW, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
+               from: 0, to: cx - halfW, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
     } else if (side === 'east') {
       road = { id: roadId, orientation: 'horizontal', center: cy + pos * halfH,
-               from: cx + halfW, to: cWidth / 2, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
+               from: cx + halfW, to: cWidth, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
     }
     if (!road) return null;
 
@@ -415,7 +478,7 @@
     if (state.selected) {
       showProperties(state.selected.type, state.selected.index);
     } else {
-      showCanvasProps();
+      document.getElementById('props-content').innerHTML = '';
     }
   }
 
@@ -435,12 +498,14 @@
         title.textContent = 'Intersection ' + (index + 1); panel.appendChild(title); buildIntersectionPanel(panel, index); break;
       case 'vehicle':
         title.textContent = 'Vehicle ' + (index + 1); panel.appendChild(title); buildVehiclePanel(panel, index); break;
+      case 'canvas':
+        title.textContent = 'Canvas'; panel.appendChild(title); buildCanvasPanel(panel); break;
       case 'compass':
         title.textContent = 'Compass'; panel.appendChild(title); buildCompassPanel(panel); break;
     }
 
-    // Delete button (not for compass — toggle instead)
-    if (type !== 'compass') {
+    // Delete button (not for compass or canvas)
+    if (type !== 'compass' && type !== 'canvas') {
       const del = document.createElement('button');
       del.className = 'btn btn-danger';
       del.textContent = 'Delete';
@@ -450,18 +515,33 @@
     }
   }
 
-  function showCanvasProps() {
-    const panel = document.getElementById('props-content');
-    panel.innerHTML = '';
-    const title = document.createElement('h3');
-    title.className = 'props-title';
-    title.textContent = 'Canvas';
-    panel.appendChild(title);
+  const BASE_W = 1057, BASE_H = 817;
 
+  function buildCanvasPanel(panel) {
     const c = state.config;
-    row(panel, 'Title',  textInp(c.title || '', v => mutate(() => c.title = v)));
-    row(panel, 'Width',  numInp(c.canvas.width,  v => mutate(() => c.canvas.width  = v)));
-    row(panel, 'Height', numInp(c.canvas.height, v => mutate(() => c.canvas.height = v)));
+    const portrait = c.canvas.width < c.canvas.height;
+    const unitW = portrait ? BASE_H : BASE_W;
+    const unitH = portrait ? BASE_W : BASE_H;
+    const cols = Math.max(1, Math.round(c.canvas.width / unitW));
+    const rows = Math.max(1, Math.round(c.canvas.height / unitH));
+
+    row(panel, 'Title', textInp(c.title || '', v => mutate(() => c.title = v)));
+    row(panel, 'Layout', selInp(
+      [{ value: 'landscape', label: 'Landscape' }, { value: 'portrait', label: 'Portrait' }],
+      portrait ? 'portrait' : 'landscape',
+      v => mutate(() => {
+        const p = v === 'portrait';
+        const uW = p ? BASE_H : BASE_W;
+        const uH = p ? BASE_W : BASE_H;
+        c.canvas.width = uW * cols;
+        c.canvas.height = uH * rows;
+      })));
+    row(panel, 'Columns', numInp(cols, v => mutate(() => {
+      c.canvas.width = unitW * Math.max(1, Math.round(v));
+    })));
+    row(panel, 'Rows', numInp(rows, v => mutate(() => {
+      c.canvas.height = unitH * Math.max(1, Math.round(v));
+    })));
   }
 
   /* ── tiny helpers for property rows ── */
@@ -839,6 +919,13 @@
       list.appendChild(h);
     }
 
+    // Canvas item always at top
+    const canvasItem = document.createElement('div');
+    canvasItem.className = 'el-item' + (state.selected?.type === 'canvas' ? ' selected' : '');
+    canvasItem.textContent = 'Canvas';
+    canvasItem.onclick = () => { state.selected = { type: 'canvas' }; rerender(); };
+    list.appendChild(canvasItem);
+
     if (state.config.roads.length) {
       header('Roads');
       state.config.roads.forEach((r, i) => list.appendChild(item('Road ' + (i + 1) + ' (' + r.orientation + ')', 'road', i)));
@@ -1006,10 +1093,10 @@
         if (road) {
           const cH = cfg.canvas.height, cW = cfg.canvas.width;
           if (road.orientation === 'vertical') {
-            const from = road.from ?? -cH / 2, to = road.to ?? cH / 2;
+            const from = road.from ?? 0, to = road.to ?? cH;
             v.t = Math.max(0, Math.min(1, (pt.y - from) / (to - from)));
           } else {
-            const from = road.from ?? -cW / 2, to = road.to ?? cW / 2;
+            const from = road.from ?? 0, to = road.to ?? cW;
             v.t = Math.max(0, Math.min(1, (pt.x - from) / (to - from)));
           }
           drag.sx = pt.x; drag.sy = pt.y;
@@ -1100,7 +1187,7 @@
             const lx = road.center + (side === 'right' ? off : -off);
             const d = Math.abs(x - lx);
             if (d < bestDist) {
-              const from = road.from ?? -cH / 2, to = road.to ?? cH / 2;
+              const from = road.from ?? 0, to = road.to ?? cH;
               bestDist = d;
               best = { road: road.id, side, lane, t: Math.max(0, Math.min(1, (y - from) / (to - from))),
                        color: 'gray', size: 'medium' };
@@ -1109,7 +1196,7 @@
             const ly = road.center + (side === 'right' ? off : -off);
             const d = Math.abs(y - ly);
             if (d < bestDist) {
-              const from = road.from ?? -cW / 2, to = road.to ?? cW / 2;
+              const from = road.from ?? 0, to = road.to ?? cW;
               bestDist = d;
               best = { road: road.id, side, lane, t: Math.max(0, Math.min(1, (x - from) / (to - from))),
                        color: 'gray', size: 'medium' };
@@ -1260,9 +1347,8 @@
 
   function updateZoom(val) {
     const v = parseFloat(val);
-    pushUndo();
-    state.config.zoom = v;
-    rerender();
+    state.uiZoom = v;
+    fitCanvas();
     document.getElementById('zoom-value').textContent = Math.round(v * 100) + '%';
   }
 
@@ -1281,6 +1367,7 @@
     document.getElementById('btn-compass').onclick      = () => mutate(() => {
       state.config.compass = state.config.compass === false ? { size: 30 } : false;
     });
+    document.getElementById('btn-grid').onclick         = () => { state.showGrid = !state.showGrid; rerender(); };
     document.getElementById('btn-undo').onclick         = undo;
     document.getElementById('btn-redo').onclick         = redo;
     document.getElementById('btn-import').onclick       = doImportJSON;
@@ -1309,7 +1396,7 @@
       if (!e.ctrlKey) return;
       e.preventDefault();
       const delta = e.deltaY > 0 ? -0.05 : 0.05;
-      const nz = Math.max(0.25, Math.min(4, (state.config.zoom || 1) + delta));
+      const nz = Math.max(0.25, Math.min(4, (state.uiZoom || 1) + delta));
       zs.value = nz;
       updateZoom(nz);
     }, { passive: false });
@@ -1320,4 +1407,5 @@
   }
 
   window.addEventListener('DOMContentLoaded', init);
+  window.addEventListener('resize', fitCanvas);
 })();

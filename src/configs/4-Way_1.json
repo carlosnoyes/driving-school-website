@@ -1,11 +1,10 @@
 {
   "title": "Empty 4-Way Intersection",
-
   "roads": [
     {
       "id": "vertical",
       "orientation": "vertical",
-      "center": 0,
+      "center": 528.5,
       "lanesPerDirection": 2,
       "laneLine": "dashed",
       "median": 12
@@ -13,17 +12,19 @@
     {
       "id": "horizontal",
       "orientation": "horizontal",
-      "center": 0,
+      "center": 408.5,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     }
   ],
-
   "intersections": [
     {
       "id": "main",
       "type": "fourWay",
-      "roads": ["vertical", "horizontal"]
+      "roads": [
+        "vertical",
+        "horizontal"
+      ]
     }
   ]
 }

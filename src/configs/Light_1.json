@@ -1,35 +1,46 @@
 {
   "title": "4-Way Intersection with 2 Traffic Lights",
-
   "roads": [
     {
       "id": "vertical",
       "orientation": "vertical",
-      "center": 0,
+      "center": 528.5,
       "laneLine": "none",
       "centerLineStyle": "none"
     },
     {
       "id": "horizontal",
       "orientation": "horizontal",
-      "center": 0,
+      "center": 408.5,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     }
   ],
-
   "intersections": [
     {
       "id": "main",
       "type": "fourWay",
-      "roads": ["vertical", "horizontal"],
+      "roads": [
+        "vertical",
+        "horizontal"
+      ],
       "stopLines": [
-        { "approach": "north" },
-        { "approach": "south" }
+        {
+          "approach": "north"
+        },
+        {
+          "approach": "south"
+        }
       ],
       "signals": [
-        { "approach": "north", "type": "trafficLight" },
-        { "approach": "south", "type": "trafficLight" }
+        {
+          "approach": "north",
+          "type": "trafficLight"
+        },
+        {
+          "approach": "south",
+          "type": "trafficLight"
+        }
       ]
     }
   ]

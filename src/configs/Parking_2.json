@@ -1,26 +1,48 @@
 {
   "title": "Parking Lot with Side Street",
-
   "parkingLots": [
     {
       "id": "lot1",
-      "x": 50,
-      "y": 0,
+      "x": 578.5,
+      "y": 408.5,
       "edgeMargin": "close",
-      "entrances": [{ "side": "west", "position": 0 }],
+      "entrances": [
+        {
+          "side": "west",
+          "position": 0
+        }
+      ],
       "rows": [
-        { "type": "double", "orientation": "vertical", "stallsPerColumn": 10, "splits": [5] },
-        { "type": "double", "orientation": "vertical", "stallsPerColumn": 10, "splits": [5] },
-        { "type": "single", "orientation": "vertical", "stallsPerColumn": 12, "direction": "right" }
+        {
+          "type": "double",
+          "orientation": "vertical",
+          "stallsPerColumn": 10,
+          "splits": [
+            5
+          ]
+        },
+        {
+          "type": "double",
+          "orientation": "vertical",
+          "stallsPerColumn": 10,
+          "splits": [
+            5
+          ]
+        },
+        {
+          "type": "single",
+          "orientation": "vertical",
+          "stallsPerColumn": 12,
+          "direction": "right"
+        }
       ]
     }
   ],
-
   "roads": [
     {
       "id": "street",
       "orientation": "vertical",
-      "center": -442,
+      "center": 86.5,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     },
@@ -34,13 +56,15 @@
       "centerLineStyle": "none"
     }
   ],
-
   "intersections": [
     {
       "id": "tee",
       "type": "tJunction",
       "blockedSide": "west",
-      "roads": ["street", "sidestreet"]
+      "roads": [
+        "street",
+        "sidestreet"
+      ]
     }
   ]
 }

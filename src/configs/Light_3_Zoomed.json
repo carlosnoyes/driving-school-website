@@ -1,41 +1,61 @@
 {
   "title": "4-Way Intersection with 4 Traffic Lights (2 Lanes Each Way, Zoomed 2:1)",
-
   "zoom": 2,
-
   "roads": [
     {
       "id": "vertical",
       "orientation": "vertical",
-      "center": 0,
+      "center": 528.5,
       "lanesPerDirection": 2,
       "centerLineStyle": "double-yellow"
     },
     {
       "id": "horizontal",
       "orientation": "horizontal",
-      "center": 0,
+      "center": 408.5,
       "lanesPerDirection": 2,
       "centerLineStyle": "double-yellow"
     }
   ],
-
   "intersections": [
     {
       "id": "main",
       "type": "fourWay",
-      "roads": ["vertical", "horizontal"],
+      "roads": [
+        "vertical",
+        "horizontal"
+      ],
       "stopLines": [
-        { "approach": "north" },
-        { "approach": "south" },
-        { "approach": "east" },
-        { "approach": "west" }
+        {
+          "approach": "north"
+        },
+        {
+          "approach": "south"
+        },
+        {
+          "approach": "east"
+        },
+        {
+          "approach": "west"
+        }
       ],
       "signals": [
-        { "approach": "north", "type": "trafficLight" },
-        { "approach": "south", "type": "trafficLight" },
-        { "approach": "east", "type": "trafficLight" },
-        { "approach": "west", "type": "trafficLight" }
+        {
+          "approach": "north",
+          "type": "trafficLight"
+        },
+        {
+          "approach": "south",
+          "type": "trafficLight"
+        },
+        {
+          "approach": "east",
+          "type": "trafficLight"
+        },
+        {
+          "approach": "west",
+          "type": "trafficLight"
+        }
       ]
     }
   ]

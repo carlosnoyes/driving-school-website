@@ -1,22 +1,53 @@
 {
   "title": "Parking Lot with Cars",
-
   "parkingLots": [
     {
       "id": "lot1",
-      "x": 0,
-      "y": 0,
+      "x": 528.5,
+      "y": 408.5,
       "edgeMargin": "close",
-      "entrances": [{ "side": "north", "position": -0.65 }, { "side": "south", "position": 0.65 }],
+      "entrances": [
+        {
+          "side": "north",
+          "position": -0.65
+        },
+        {
+          "side": "south",
+          "position": 0.65
+        }
+      ],
       "rows": [
-        { "type": "single", "orientation": "vertical", "stallsPerColumn": 14, "direction": "left" },
-        { "type": "double", "orientation": "vertical", "stallsPerColumn": 12, "splits": [6] },
-        { "type": "double", "orientation": "vertical", "stallsPerColumn": 12, "splits": [6] },
-        { "type": "single", "orientation": "vertical", "stallsPerColumn": 14, "direction": "right" }
+        {
+          "type": "single",
+          "orientation": "vertical",
+          "stallsPerColumn": 14,
+          "direction": "left"
+        },
+        {
+          "type": "double",
+          "orientation": "vertical",
+          "stallsPerColumn": 12,
+          "splits": [
+            6
+          ]
+        },
+        {
+          "type": "double",
+          "orientation": "vertical",
+          "stallsPerColumn": 12,
+          "splits": [
+            6
+          ]
+        },
+        {
+          "type": "single",
+          "orientation": "vertical",
+          "stallsPerColumn": 14,
+          "direction": "right"
+        }
       ]
     }
   ],
-
   "roads": [
     {
       "id": "north_street",
@@ -35,34 +66,178 @@
       "centerLineStyle": "double-yellow"
     }
   ],
-
   "vehicles": [
-    { "road": "north_street", "side": "left",  "t": 0.3, "color": "white", "size": "medium" },
-    { "road": "south_street", "side": "right", "t": 0.4, "color": "blue",  "size": "large" },
-
-    { "parkingLot": 0, "row": 0, "stall": 1,  "color": "red",    "size": "large" },
-    { "parkingLot": 0, "row": 0, "stall": 4,  "color": "blue",   "size": "medium" },
-    { "parkingLot": 0, "row": 0, "stall": 7,  "color": "white",  "size": "small" },
-    { "parkingLot": 0, "row": 0, "stall": 10, "color": "green",  "size": "large" },
-    { "parkingLot": 0, "row": 0, "stall": 13, "color": "yellow", "size": "medium" },
-
-    { "parkingLot": 0, "row": 1, "stall": 0,  "subRow": "left",  "color": "black",  "size": "large" },
-    { "parkingLot": 0, "row": 1, "stall": 3,  "subRow": "left",  "color": "orange", "size": "medium" },
-    { "parkingLot": 0, "row": 1, "stall": 2,  "subRow": "right", "color": "gray",   "size": "small" },
-    { "parkingLot": 0, "row": 1, "stall": 5,  "subRow": "right", "color": "red",    "size": "large" },
-    { "parkingLot": 0, "row": 1, "stall": 7,  "subRow": "left",  "color": "white",  "size": "medium" },
-    { "parkingLot": 0, "row": 1, "stall": 10, "subRow": "right", "color": "blue",   "size": "large" },
-
-    { "parkingLot": 0, "row": 2, "stall": 1,  "subRow": "left",  "color": "green",  "size": "medium" },
-    { "parkingLot": 0, "row": 2, "stall": 4,  "subRow": "right", "color": "yellow", "size": "large" },
-    { "parkingLot": 0, "row": 2, "stall": 8,  "subRow": "left",  "color": "red",    "size": "small" },
-    { "parkingLot": 0, "row": 2, "stall": 9,  "subRow": "right", "color": "orange", "size": "medium" },
-    { "parkingLot": 0, "row": 2, "stall": 11, "subRow": "left",  "color": "black",  "size": "large" },
-
-    { "parkingLot": 0, "row": 3, "stall": 2,  "color": "gray",   "size": "large" },
-    { "parkingLot": 0, "row": 3, "stall": 5,  "color": "white",  "size": "small" },
-    { "parkingLot": 0, "row": 3, "stall": 8,  "color": "blue",   "size": "medium" },
-    { "parkingLot": 0, "row": 3, "stall": 11, "color": "red",    "size": "large" },
-    { "parkingLot": 0, "row": 3, "stall": 13, "color": "green",  "size": "medium" }
+    {
+      "road": "north_street",
+      "side": "left",
+      "t": 0.3,
+      "color": "white",
+      "size": "medium"
+    },
+    {
+      "road": "south_street",
+      "side": "right",
+      "t": 0.4,
+      "color": "blue",
+      "size": "large"
+    },
+    {
+      "parkingLot": 0,
+      "row": 0,
+      "stall": 1,
+      "color": "red",
+      "size": "large"
+    },
+    {
+      "parkingLot": 0,
+      "row": 0,
+      "stall": 4,
+      "color": "blue",
+      "size": "medium"
+    },
+    {
+      "parkingLot": 0,
+      "row": 0,
+      "stall": 7,
+      "color": "white",
+      "size": "small"
+    },
+    {
+      "parkingLot": 0,
+      "row": 0,
+      "stall": 10,
+      "color": "green",
+      "size": "large"
+    },
+    {
+      "parkingLot": 0,
+      "row": 0,
+      "stall": 13,
+      "color": "yellow",
+      "size": "medium"
+    },
+    {
+      "parkingLot": 0,
+      "row": 1,
+      "stall": 0,
+      "subRow": "left",
+      "color": "black",
+      "size": "large"
+    },
+    {
+      "parkingLot": 0,
+      "row": 1,
+      "stall": 3,
+      "subRow": "left",
+      "color": "orange",
+      "size": "medium"
+    },
+    {
+      "parkingLot": 0,
+      "row": 1,
+      "stall": 2,
+      "subRow": "right",
+      "color": "gray",
+      "size": "small"
+    },
+    {
+      "parkingLot": 0,
+      "row": 1,
+      "stall": 5,
+      "subRow": "right",
+      "color": "red",
+      "size": "large"
+    },
+    {
+      "parkingLot": 0,
+      "row": 1,
+      "stall": 7,
+      "subRow": "left",
+      "color": "white",
+      "size": "medium"
+    },
+    {
+      "parkingLot": 0,
+      "row": 1,
+      "stall": 10,
+      "subRow": "right",
+      "color": "blue",
+      "size": "large"
+    },
+    {
+      "parkingLot": 0,
+      "row": 2,
+      "stall": 1,
+      "subRow": "left",
+      "color": "green",
+      "size": "medium"
+    },
+    {
+      "parkingLot": 0,
+      "row": 2,
+      "stall": 4,
+      "subRow": "right",
+      "color": "yellow",
+      "size": "large"
+    },
+    {
+      "parkingLot": 0,
+      "row": 2,
+      "stall": 8,
+      "subRow": "left",
+      "color": "red",
+      "size": "small"
+    },
+    {
+      "parkingLot": 0,
+      "row": 2,
+      "stall": 9,
+      "subRow": "right",
+      "color": "orange",
+      "size": "medium"
+    },
+    {
+      "parkingLot": 0,
+      "row": 2,
+      "stall": 11,
+      "subRow": "left",
+      "color": "black",
+      "size": "large"
+    },
+    {
+      "parkingLot": 0,
+      "row": 3,
+      "stall": 2,
+      "color": "gray",
+      "size": "large"
+    },
+    {
+      "parkingLot": 0,
+      "row": 3,
+      "stall": 5,
+      "color": "white",
+      "size": "small"
+    },
+    {
+      "parkingLot": 0,
+      "row": 3,
+      "stall": 8,
+      "color": "blue",
+      "size": "medium"
+    },
+    {
+      "parkingLot": 0,
+      "row": 3,
+      "stall": 11,
+      "color": "red",
+      "size": "large"
+    },
+    {
+      "parkingLot": 0,
+      "row": 3,
+      "stall": 13,
+      "color": "green",
+      "size": "medium"
+    }
   ]
 }
