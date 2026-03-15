@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagram Builder</title>
+  <link rel="stylesheet" href="builder.css">
+</head>
+<body>
+  <!-- ── Toolbar ── -->
+  <div id="toolbar">
+    <button class="tool-btn active" data-mode="select" id="btn-select" title="Select / Move (Esc)">Select</button>
+    <button class="tool-btn" data-mode="addRoad" id="btn-add-road" title="Add Road">+ Road</button>
+    <button class="tool-btn" data-mode="addLot" id="btn-add-lot" title="Add Parking Lot">+ Lot</button>
+    <button class="tool-btn" data-mode="addVehicle" id="btn-add-vehicle" title="Add Vehicle">+ Vehicle</button>
+    <div class="sep"></div>
+    <button class="btn" id="btn-compass" title="Toggle Compass">Compass</button>
+    <div class="sep"></div>
+    <div id="zoom-group">
+      <span style="font-size:11px">Zoom</span>
+      <input type="range" id="zoom-slider" min="0.25" max="4" step="0.05" value="1">
+      <span id="zoom-value">100%</span>
+    </div>
+    <div class="sep"></div>
+    <button class="btn" id="btn-undo" title="Undo (Ctrl+Z)">Undo</button>
+    <button class="btn" id="btn-redo" title="Redo (Ctrl+Y)">Redo</button>
+    <div class="sep"></div>
+    <button class="btn" id="btn-import" title="Import JSON">Import</button>
+    <button class="btn" id="btn-export-json" title="Export JSON">Export JSON</button>
+    <button class="btn" id="btn-export-png" title="Export PNG">Export PNG</button>
+    <div class="sep"></div>
+    <button class="btn" id="btn-json-editor" title="Toggle JSON Editor">JSON Editor</button>
+  </div>
+
+  <!-- ── Main Area ── -->
+  <div id="main">
+    <!-- Left sidebar: element list -->
+    <div id="sidebar-left">
+      <h3>Elements</h3>
+      <div id="element-list"></div>
+    </div>
+
+    <!-- Canvas -->
+    <div id="canvas-wrapper">
+      <div id="canvas-inner">
+        <div id="diagram-container"></div>
+        <svg id="overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+    </div>
+
+    <!-- Right sidebar: properties -->
+    <div id="sidebar-right">
+      <div id="props-content"></div>
+    </div>
+  </div>
+
+  <!-- JSON Editor Panel -->
+  <div id="json-panel" class="hidden">
+    <div class="json-header">
+      <span>JSON Editor</span>
+      <div>
+        <button class="btn btn-small" id="btn-apply-json">Apply</button>
+        <button class="btn btn-small" id="btn-close-json">Close</button>
+      </div>
+    </div>
+    <textarea id="json-editor" spellcheck="false"></textarea>
+  </div>
+
+  <!-- Status bar -->
+  <div id="status-bar">
+    <span id="status-text">Ready — click "+ Road" to start building</span>
+  </div>
+
+  <script src="primitives.js"></script>
+  <script src="diagram.js"></script>
+  <script src="builder.js"></script>
+</body>
+</html>

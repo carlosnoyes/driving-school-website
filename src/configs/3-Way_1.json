@@ -3,17 +3,17 @@
 
   "roads": [
     {
-      "id": "vertical",
+      "id": "vertical_road",
       "orientation": "vertical",
       "center": 0,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     },
     {
-      "id": "horizontal",
+      "id": "horizontal_road",
       "orientation": "horizontal",
       "center": 0,
-      "from": 0,
+      "from": "vertical_road",
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     }
@@ -24,7 +24,7 @@
       "id": "main",
       "type": "tJunction",
       "blockedSide": "west",
-      "roads": ["vertical", "horizontal"]
+      "roads": ["vertical_road", "horizontal_road"]
     }
   ]
 }

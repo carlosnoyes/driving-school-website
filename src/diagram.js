@@ -45,36 +45,8 @@ const Diagram = (() => {
     const cW = cfg.canvas.width;
     const cH = cfg.canvas.height;
 
-    // Roads
-    (cfg.roads || []).forEach(r => {
-      r.laneWidth = r.laneWidth ?? d.laneWidth;
-      if (r.orientation === 'vertical') {
-        r.from = r.from ?? -cH / 2;
-        r.to = r.to ?? cH / 2;
-      } else {
-        r.from = r.from ?? -cW / 2;
-        r.to = r.to ?? cW / 2;
-      }
-      if (r.shoulder == null && d.shoulder >= 0) r.shoulder = d.shoulder;
-    });
-
-    // Intersections — derive center from roads if not explicit
-    const roadLookup = {};
-    (cfg.roads || []).forEach(r => { roadLookup[r.id] = r; });
-    (cfg.intersections || []).forEach(ix => {
-      if (!ix.center && ix.roads && ix.roads.length >= 2) {
-        const r0 = roadLookup[ix.roads[0]];
-        const r1 = roadLookup[ix.roads[1]];
-        if (r0 && r1) {
-          const vRoad = r0.orientation === 'vertical' ? r0 : r1;
-          const hRoad = r0.orientation === 'horizontal' ? r0 : r1;
-          ix.center = [vRoad.center, hRoad.center];
-        }
-      }
-      ix.radius = ix.radius ?? d.radius;
-    });
-
-    // Parking lots — apply row defaults, then auto-calculate dimensions
+    // Parking lots — apply row defaults, compute dimensions, then convert
+    // center-point x,y to top-left _x,_y for rendering.
     (cfg.parkingLots || []).forEach(lot => {
       const rows = lot.rows || [];
       rows.forEach(row => {
@@ -123,7 +95,6 @@ const Diagram = (() => {
         }
 
         // Auto-calculate row X offsets and lot width
-        // Per-row width = stalls × stallWidth + applicable splits × laneGap
         const maxRowWidth = Math.max(...rows.map(r => {
           const cnt = r.stallsPerRow || 1;
           const numSplits = r._splits.filter(s => s > 0 && s < cnt).length;
@@ -163,58 +134,87 @@ const Diagram = (() => {
           if (row.y == null && row.offsetY == null) row.offsetY = emStart;
         });
       }
+
+      // Convert center-point x,y to top-left _x,_y for rendering
+      lot._x = (lot.x ?? 0) - lot.width / 2;
+      lot._y = (lot.y ?? 0) - lot.height / 2;
+
+      // Compute entrance positions (absolute coordinates).
+      // position: -1 to 1 along the wall (0 = center, default 0).
+      const cx = lot.x ?? 0, cy = lot.y ?? 0;
+      lot._entrances = (lot.entrances || []).map(ent => {
+        const side = ent.side || 'west';
+        const pos = ent.position ?? 0;
+        let ex, ey;
+        if (side === 'west' || side === 'east') {
+          ex = (side === 'west') ? lot._x : lot._x + lot.width;
+          ey = cy + pos * (lot.height / 2);
+        } else {
+          ex = cx + pos * (lot.width / 2);
+          ey = (side === 'north') ? lot._y : lot._y + lot.height;
+        }
+        return { side, x: ex, y: ey, laneGap };
+      });
     });
 
-    // Parking lot road-linked positioning — derive lot x/y from the
-    // road it connects to (typically a short sidestreet that dead-ends
-    // into the lot).  The `entrance` property (1-based) aligns a specific
-    // driving-lane gap with the road's center line.
-    (cfg.parkingLots || []).forEach((lot) => {
-      if (!lot.road) return;
-      const road = roadLookup[lot.road];
-      if (!road) return;
-      const rows = lot.rows || [];
-      if (rows.length === 0) return;
+    // Build lot lookup for road references
+    const lotLookup = {};
+    (cfg.parkingLots || []).forEach(lot => { if (lot.id) lotLookup[lot.id] = lot; });
 
-      const side = lot.side || 'east';
-      const laneGap = lot._laneGap;
-      const isVertRows = rows[0].orientation === 'vertical';
-
-      // Compute driving-lane centers within the lot (relative to lot origin)
-      const laneCenters = [];
-      for (let i = 0; i < rows.length - 1; i++) {
-        const row = rows[i];
-        const offset = isVertRows ? (row.offsetX || 0) : (row.offsetY || 0);
-        const size = (row.type === 'double') ? row.stallDepth * 2 : row.stallDepth;
-        laneCenters.push(offset + size + laneGap / 2);
+    // Resolve a string reference to a numeric value.
+    // Supports "roadId", "lotId" (first entrance), or "lotId:N" (Nth entrance, 1-based).
+    // axis: 'along' (from/to — same axis as road) or 'across' (center — perpendicular)
+    function resolveRef(value, orientation, roadLookup, axis) {
+      if (typeof value !== 'string') return value;
+      if (roadLookup[value]) return roadLookup[value].center;
+      // Parse "lotId:N" syntax for specific entrance
+      const parts = value.split(':');
+      const lotId = parts[0];
+      const entIdx = parts.length > 1 ? (parseInt(parts[1], 10) - 1) : 0;
+      const lot = lotLookup[lotId];
+      if (lot) {
+        const ent = lot._entrances[entIdx] || lot._entrances[0];
+        if (!ent) return value;
+        if (axis === 'across') {
+          return orientation === 'horizontal' ? ent.y : ent.x;
+        } else {
+          return orientation === 'horizontal' ? ent.x : ent.y;
+        }
       }
+      return value;
+    }
 
-      const entranceIdx = (lot.entrance || 1) - 1;  // 1-based → 0-based
-      const gapCenter = laneCenters[entranceIdx] || laneCenters[0] || 0;
-
-      if (road.orientation === 'horizontal') {
-        // Horizontal sidestreet — lot attaches to its east or west end
-        const deadEnd = (side === 'east')
-          ? Math.max(road.from, road.to)
-          : Math.min(road.from, road.to);
-        if (lot.x == null) {
-          lot.x = (side === 'east') ? deadEnd : deadEnd - lot.width;
-        }
-        if (lot.y == null) {
-          lot.y = road.center - gapCenter;
-        }
+    // Roads — resolve string references, then apply defaults.
+    // Roads are processed in order so later roads can reference earlier ones.
+    const roadLookup = {};
+    (cfg.roads || []).forEach(r => {
+      r.center = resolveRef(r.center, r.orientation, roadLookup, 'across');
+      r.from = resolveRef(r.from, r.orientation, roadLookup, 'along');
+      r.to = resolveRef(r.to, r.orientation, roadLookup, 'along');
+      r.laneWidth = r.laneWidth ?? d.laneWidth;
+      if (r.orientation === 'vertical') {
+        r.from = r.from ?? -cH / 2;
+        r.to = r.to ?? cH / 2;
       } else {
-        // Vertical sidestreet — lot attaches to its south or north end
-        const deadEnd = (side === 'south')
-          ? Math.max(road.from, road.to)
-          : Math.min(road.from, road.to);
-        if (lot.y == null) {
-          lot.y = (side === 'south') ? deadEnd : deadEnd - lot.height;
-        }
-        if (lot.x == null) {
-          lot.x = road.center - gapCenter;
+        r.from = r.from ?? -cW / 2;
+        r.to = r.to ?? cW / 2;
+      }
+      if (r.shoulder == null && d.shoulder >= 0) r.shoulder = d.shoulder;
+      roadLookup[r.id] = r;
+    });
+
+    // Intersections — derive center from roads if not explicit
+    (cfg.intersections || []).forEach(ix => {
+      if (!ix.center && ix.roads && ix.roads.length >= 2) {
+        const r0 = roadLookup[ix.roads[0]];
+        const r1 = roadLookup[ix.roads[1]];
+        if (r0 && r1) {
+          const vRoad = r0.orientation === 'vertical' ? r0 : r1;
+          const hRoad = r0.orientation === 'horizontal' ? r0 : r1;
+          ix.center = [vRoad.center, hRoad.center];
         }
       }
+      ix.radius = ix.radius ?? d.radius;
     });
 
     // Entrances — derive center, shoulder, radius from linked road
@@ -512,7 +512,6 @@ const Diagram = (() => {
             Signals.trafficLight(svg, light.x, light.y, { ...s, direction: light.direction });
           });
         } else if (s.type === 'stopSign') Signals.stopSign(svg, s.x, s.y, s);
-        else if (s.type === 'laneArrow') Signals.laneArrow(svg, s.x, s.y, s.direction, s);
       });
     });
 
@@ -557,10 +556,34 @@ const Diagram = (() => {
       medianColor: r.medianColor,
       shoulder: r.shoulder,
     };
+
+    // Collect clip ranges where tJunctions block this road
+    const clips = [];
+    junctions.forEach(jx => {
+      if (jx.type !== 'tJunction' || !jx.blockedSide) return;
+      if (!(jx.roads || []).includes(r.id)) return;
+      const bs = jx.blockedSide;
+      if (r.orientation === 'vertical' && (bs === 'north' || bs === 'south')) {
+        if (bs === 'north') clips.push({ cut: 'before', at: jx.cy - jx.halfW });
+        else clips.push({ cut: 'after', at: jx.cy + jx.halfW });
+      } else if (r.orientation === 'horizontal' && (bs === 'west' || bs === 'east')) {
+        if (bs === 'west') clips.push({ cut: 'before', at: jx.cx - jx.halfH });
+        else clips.push({ cut: 'after', at: jx.cx + jx.halfH });
+      }
+    });
+
+    let from = r.from, to = r.to;
+    clips.forEach(c => {
+      if (c.cut === 'before') from = Math.max(from, c.at);
+      else to = Math.min(to, c.at);
+    });
+
+    if (from >= to) return; // fully clipped
+
     if (r.orientation === 'vertical') {
-      Roads.verticalRoad(svg, r.center, r.from, r.to, opts);
+      Roads.verticalRoad(svg, r.center, from, to, opts);
     } else {
-      Roads.horizontalRoad(svg, r.center, r.from, r.to, opts);
+      Roads.horizontalRoad(svg, r.center, from, to, opts);
     }
   }
 
@@ -598,14 +621,16 @@ const Diagram = (() => {
 
   /* ── Parking lot rendering ── */
   function renderParkingLot(svg, lot) {
-    Parking.surface(svg, lot.x, lot.y, lot.width, lot.height);
+    Parking.surface(svg, lot._x, lot._y, lot.width, lot.height, {
+      entrances: lot._entrances,
+    });
     const laneGap = lot._laneGap || 100;
 
     (lot.rows || []).forEach(row => {
       const opts = { stallWidth: row.stallWidth, stallDepth: row.stallDepth, direction: row.direction };
       const sw = row.stallWidth;
-      const rx = row.x ?? lot.x + (row.offsetX || 0);
-      const ry = row.y ?? lot.y + (row.offsetY || 0);
+      const rx = row.x ?? lot._x + (row.offsetX || 0);
+      const ry = row.y ?? lot._y + (row.offsetY || 0);
       const isVert = row.orientation === 'vertical';
       const count = isVert ? (row.stallsPerColumn || 1) : (row.stallsPerRow || 1);
       const rowSplits = row._splits || [];
@@ -719,8 +744,8 @@ const Diagram = (() => {
 
     const sw = row.stallWidth ?? Parking.D.stallWidth;
     const sd = row.stallDepth ?? Parking.D.stallDepth;
-    const rx = row.x ?? lot.x + (row.offsetX || 0);
-    const ry = row.y ?? lot.y + (row.offsetY || 0);
+    const rx = row.x ?? lot._x + (row.offsetX || 0);
+    const ry = row.y ?? lot._y + (row.offsetY || 0);
     const stallIdx = v.stall ?? 0;
     const isVertical = row.orientation === 'vertical';
     const carH = v.height;
@@ -812,5 +837,5 @@ const Diagram = (() => {
     document.body.appendChild(btn);
   }
 
-  return { DEFAULTS, render, addExportButton };
+  return { DEFAULTS, render, addExportButton, applyDefaults };
 })();

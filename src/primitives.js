@@ -134,7 +134,7 @@ const Roads = (() => {
     });
   }
 
-  function centerLine(p, x1, y1, x2, y2, style = 'dashed-yellow') {
+  function centerLine(p, x1, y1, x2, y2, style = 'double-yellow') {
     if (style === 'none') return;
     if (style === 'solid-yellow' || style === 'solid') {
       solidLine(p, x1, y1, x2, y2, { color: D.centerColor });
@@ -237,7 +237,7 @@ const Roads = (() => {
       const medX = cx - med / 2;
       medianRect(g, medX, yMin, med, yLen, opts.medianColor || '#5a5a5a');
     } else {
-      centerLine(g, cx, y1, cx, y2, opts.centerLineStyle || 'dashed-yellow');
+      centerLine(g, cx, y1, cx, y2, opts.centerLineStyle || 'double-yellow');
     }
 
     // Lane dividers
@@ -284,7 +284,7 @@ const Roads = (() => {
       const medY = cy - med / 2;
       medianRect(g, xMin, medY, xLen, med, opts.medianColor || '#5a5a5a');
     } else {
-      centerLine(g, x1, cy, x2, cy, opts.centerLineStyle || 'dashed-yellow');
+      centerLine(g, x1, cy, x2, cy, opts.centerLineStyle || 'double-yellow');
     }
 
     const ll = opts.laneLine ?? 'dashed';
@@ -552,23 +552,7 @@ const Signals = (() => {
     return g;
   }
 
-  function laneArrow(p, x, y, direction, opts = {}) {
-    const sc = opts.scale || 1;
-    const color = opts.color || '#fff';
-    const g = SVG.group(p);
-    let rot = 0;
-    if (direction === 'east') rot = 90;
-    else if (direction === 'south') rot = 180;
-    else if (direction === 'west') rot = 270;
-    g.setAttribute('transform', `rotate(${rot}, ${x}, ${y})`);
-    const s = 8 * sc;
-    SVG.path(g,
-      `M ${x} ${y - s} L ${x + s * 0.6} ${y} L ${x + s * 0.2} ${y} L ${x + s * 0.2} ${y + s} L ${x - s * 0.2} ${y + s} L ${x - s * 0.2} ${y} L ${x - s * 0.6} ${y} Z`,
-      { fill: color, stroke: 'none', opacity: 0.8 });
-    return g;
-  }
-
-  return { trafficLight, stopSign, laneArrow };
+  return { trafficLight, stopSign };
 })();
 
 
@@ -641,8 +625,23 @@ const Parking = (() => {
 
   function surface(p, x, y, w, h, opts = {}) {
     const g = SVG.group(p);
-    SVG.rect(g, x, y, w, h, { fill: opts.surfaceColor || D.surfaceColor });
-    SVG.rect(g, x, y, w, h, { fill: 'none', stroke: opts.borderColor || D.borderColor, 'stroke-width': opts.borderWidth || D.borderWidth });
+    const sc = opts.surfaceColor || D.surfaceColor;
+    const bw = opts.borderWidth || D.borderWidth;
+    SVG.rect(g, x, y, w, h, { fill: sc });
+    SVG.rect(g, x, y, w, h, { fill: 'none', stroke: opts.borderColor || D.borderColor, 'stroke-width': bw });
+    // Erase border at entrance openings
+    (opts.entrances || []).forEach(ent => {
+      const half = ent.laneGap / 2;
+      if (ent.side === 'west') {
+        SVG.line(g, x, ent.y - half, x, ent.y + half, { stroke: sc, 'stroke-width': bw + 2 });
+      } else if (ent.side === 'east') {
+        SVG.line(g, x + w, ent.y - half, x + w, ent.y + half, { stroke: sc, 'stroke-width': bw + 2 });
+      } else if (ent.side === 'north') {
+        SVG.line(g, ent.x - half, y, ent.x + half, y, { stroke: sc, 'stroke-width': bw + 2 });
+      } else if (ent.side === 'south') {
+        SVG.line(g, ent.x - half, y + h, ent.x + half, y + h, { stroke: sc, 'stroke-width': bw + 2 });
+      }
+    });
     return g;
   }
 

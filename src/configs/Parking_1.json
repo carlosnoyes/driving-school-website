@@ -3,14 +3,36 @@
 
   "parkingLots": [
     {
-      "x": -528,
-      "y": -408,
+      "id": "lot1",
+      "x": 0,
+      "y": 0,
       "edgeMargin": "close",
+      "entrances": [{ "side": "north", "position": -0.65 }, { "side": "south", "position": 0.65 }],
       "rows": [
         { "type": "single", "orientation": "vertical", "stallsPerColumn": 14, "direction": "left" },
-        { "type": "double", "orientation": "vertical", "stallsPerColumn": 14 },
-        { "type": "double", "orientation": "vertical", "stallsPerColumn": 14 }
+        { "type": "double", "orientation": "vertical", "stallsPerColumn": 12, "splits": [6] },
+        { "type": "double", "orientation": "vertical", "stallsPerColumn": 12, "splits": [6] },
+        { "type": "single", "orientation": "vertical", "stallsPerColumn": 14, "direction": "right" }
       ]
+    }
+  ],
+
+  "roads": [
+    {
+      "id": "north_street",
+      "orientation": "vertical",
+      "center": "lot1:1",
+      "to": "lot1:1",
+      "laneLine": "none",
+      "centerLineStyle": "double-yellow"
+    },
+    {
+      "id": "south_street",
+      "orientation": "vertical",
+      "center": "lot1:2",
+      "from": "lot1:2",
+      "laneLine": "none",
+      "centerLineStyle": "double-yellow"
     }
   ]
 }
