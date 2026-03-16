@@ -220,6 +220,12 @@ const Roads = (() => {
     const g = SVG.group(p);
     const yMin = Math.min(y1, y2), yLen = Math.abs(y2 - y1);
 
+    // Clip to road bounds so line strokes don't overshoot
+    const clipId = 'vroad-clip-' + Math.random().toString(36).slice(2, 8);
+    const clipPath = SVG.append(g, 'clipPath', { id: clipId });
+    SVG.rect(clipPath, left, yMin, totalW, yLen, {});
+    g.setAttribute('clip-path', 'url(#' + clipId + ')');
+
     // Road surface (full width including shoulders)
     SVG.rect(g, left, yMin, totalW, yLen, { fill: rc });
 
@@ -270,6 +276,12 @@ const Roads = (() => {
     const top = cy - totalW / 2;
     const g = SVG.group(p);
     const xMin = Math.min(x1, x2), xLen = Math.abs(x2 - x1);
+
+    // Clip to road bounds so line strokes don't overshoot
+    const clipId = 'hroad-clip-' + Math.random().toString(36).slice(2, 8);
+    const clipPath = SVG.append(g, 'clipPath', { id: clipId });
+    SVG.rect(clipPath, xMin, top, xLen, totalW, {});
+    g.setAttribute('clip-path', 'url(#' + clipId + ')');
 
     SVG.rect(g, xMin, top, xLen, totalW, { fill: rc });
 
@@ -349,6 +361,104 @@ const Intersections = (() => {
   }
 
   /**
+   * Draw a 90-degree curved road turn through the intersection.
+   * The arc center is at the corner where the two BLOCKED sides meet.
+   * The road curves as an annular band from one arm to the other.
+   */
+  function turn(p, cx, cy, blockedSides, halfW, halfH, opts = {}) {
+    const g = SVG.group(p);
+    const rc = opts.roadColor || Roads.D.roadColor;
+    const bset = new Set(blockedSides);
+    const sh = opts.shoulder ?? -1;
+    const shW = sh > 0 ? sh : 0;
+    const hw = Math.max(halfH, halfW);
+    const roadW = 2 * hw; // total road width
+
+    // Arc center at corner where OPEN sides meet
+    // dx/dy point from arc center toward intersection interior
+    let acx, acy, dx, dy;
+    if (bset.has('south') && bset.has('west')) {       // NE turn
+      acx = cx + halfH; acy = cy - halfW; dx = -1; dy = 1;
+    } else if (bset.has('south') && bset.has('east')) { // NW turn
+      acx = cx - halfH; acy = cy - halfW; dx = 1; dy = 1;
+    } else if (bset.has('north') && bset.has('west')) { // SE turn
+      acx = cx + halfH; acy = cy + halfW; dx = -1; dy = -1;
+    } else {                                            // SW turn
+      acx = cx - halfH; acy = cy + halfW; dx = 1; dy = -1;
+    }
+
+    // Arc point at radius r from arc center, on the vertical arm side and horizontal arm side
+    function vPt(r) { return { x: acx + dx * r, y: acy }; }      // on vertical road edge
+    function hPt(r) { return { x: acx, y: acy + dy * r }; }      // on horizontal road edge
+
+    // Sweep flag: determine via cross product of (vPt - center) × (hPt - center)
+    const cross = (dx * roadW) * (dy * roadW) - 0;  // simplified
+    const sweep = cross > 0 ? 1 : 0;
+
+    function arc(r, p1, p2) {
+      return `M ${p1.x} ${p1.y} A ${r} ${r} 0 0 ${sweep} ${p2.x} ${p2.y}`;
+    }
+
+    // 1. Road surface: annular band between inner edge (r=0) and outer edge (r=roadW)
+    // Draw as a filled shape: outer arc + lines to inner point + close
+    const o1 = vPt(roadW), o2 = hPt(roadW);
+    SVG.path(g,
+      `M ${acx} ${acy} L ${o1.x} ${o1.y} A ${roadW} ${roadW} 0 0 ${sweep} ${o2.x} ${o2.y} Z`,
+      { fill: rc, stroke: 'none' });
+
+    // 2. Shoulder lines
+    if (sh >= 0) {
+      if (shW > 0) {
+        // Inner shoulder line (near arc center)
+        const si1 = vPt(shW), si2 = hPt(shW);
+        SVG.path(g, arc(shW, si1, si2),
+          { fill: 'none', stroke: '#fff', 'stroke-width': Roads.D.laneLineWidth });
+      }
+      // Outer shoulder line
+      const so1 = vPt(roadW - shW), so2 = hPt(roadW - shW);
+      SVG.path(g, arc(roadW - shW, so1, so2),
+        { fill: 'none', stroke: '#fff', 'stroke-width': Roads.D.laneLineWidth });
+    }
+
+    // 3. Center line at radius = hw (middle of road band)
+    const cls = opts.centerLineStyle || 'double-yellow';
+    if (cls !== 'none') {
+      if (cls === 'double-yellow') {
+        for (const dr of [-2, 2]) {
+          const r = hw + dr;
+          SVG.path(g, arc(r, vPt(r), hPt(r)),
+            { fill: 'none', stroke: Roads.D.centerColor, 'stroke-width': Roads.D.centerWidth });
+        }
+      } else if (cls === 'solid-yellow' || cls === 'solid') {
+        SVG.path(g, arc(hw, vPt(hw), hPt(hw)),
+          { fill: 'none', stroke: Roads.D.centerColor, 'stroke-width': Roads.D.centerWidth });
+      } else {
+        SVG.path(g, arc(hw, vPt(hw), hPt(hw)),
+          { fill: 'none', stroke: Roads.D.centerColor, 'stroke-width': Roads.D.centerWidth,
+            'stroke-dasharray': Roads.D.dashLen + ',' + Roads.D.dashGap });
+      }
+    }
+
+    // 4. Lane dividers
+    const lpd = opts.lanesPerDirection || 1;
+    const lw = opts.laneWidth || Roads.D.laneWidth;
+    if (lpd > 1) {
+      for (let i = 1; i < lpd; i++) {
+        const rIn = shW + i * lw;
+        SVG.path(g, arc(rIn, vPt(rIn), hPt(rIn)),
+          { fill: 'none', stroke: '#fff', 'stroke-width': Roads.D.laneLineWidth,
+            'stroke-dasharray': Roads.D.dashLen + ',' + Roads.D.dashGap });
+        const rOut = hw + 2 + i * lw;
+        SVG.path(g, arc(rOut, vPt(rOut), hPt(rOut)),
+          { fill: 'none', stroke: '#fff', 'stroke-width': Roads.D.laneLineWidth,
+            'stroke-dasharray': Roads.D.dashLen + ',' + Roads.D.dashGap });
+      }
+    }
+
+    return g;
+  }
+
+  /**
    * Junction overlay with rounded curb corners.
    * Draws on top of intersection + roads to smooth the corners.
    *
@@ -373,41 +483,44 @@ const Intersections = (() => {
     const blocked = opts.blockedSide || null;
 
     // Fill intersection box (masks lines through intersection)
-    // For T-junctions, fill from just past the far shoulder line to the open side
-    const si = sh + 1; // shoulder inset — clear past the shoulder line thickness
-    if (blocked === 'west') {
-      SVG.rect(g, left + si, top, right - left - si, halfW * 2, { fill: rc });
-    } else if (blocked === 'east') {
-      SVG.rect(g, left, top, right - left - si, halfW * 2, { fill: rc });
-    } else if (blocked === 'north') {
-      SVG.rect(g, left, top + si, halfH * 2, bot - top - si, { fill: rc });
-    } else if (blocked === 'south') {
-      SVG.rect(g, left, top, halfH * 2, bot - top - si, { fill: rc });
-    } else {
-      SVG.rect(g, left, top, halfH * 2, halfW * 2, { fill: rc });
-    }
+    // Skip for turns — the turn function handles the road surface.
+    if (!opts.noFill) {
+      // For T-junctions, fill from just past the far shoulder line to the open side
+      const si = sh + 1; // shoulder inset — clear past the shoulder line thickness
+      if (blocked === 'west') {
+        SVG.rect(g, left + si, top, right - left - si, halfW * 2, { fill: rc });
+      } else if (blocked === 'east') {
+        SVG.rect(g, left, top, right - left - si, halfW * 2, { fill: rc });
+      } else if (blocked === 'north') {
+        SVG.rect(g, left, top + si, halfH * 2, bot - top - si, { fill: rc });
+      } else if (blocked === 'south') {
+        SVG.rect(g, left, top, halfH * 2, bot - top - si, { fill: rc });
+      } else {
+        SVG.rect(g, left, top, halfH * 2, halfW * 2, { fill: rc });
+      }
 
-    // Arm extensions — mask road markings up to the radius point
-    // For T-junctions, only extend on the side-road half
-    if (arms.north) {
-      if (blocked === 'west') SVG.rect(g, left + si, top - r, right - left - si, r, { fill: rc });
-      else if (blocked === 'east') SVG.rect(g, left, top - r, right - left - si, r, { fill: rc });
-      else SVG.rect(g, left, top - r, halfH * 2, r, { fill: rc });
-    }
-    if (arms.south) {
-      if (blocked === 'west') SVG.rect(g, left + si, bot, right - left - si, r, { fill: rc });
-      else if (blocked === 'east') SVG.rect(g, left, bot, right - left - si, r, { fill: rc });
-      else SVG.rect(g, left, bot, halfH * 2, r, { fill: rc });
-    }
-    if (arms.west) {
-      if (blocked === 'north') SVG.rect(g, left - r, top + si, r, bot - top - si, { fill: rc });
-      else if (blocked === 'south') SVG.rect(g, left - r, top, r, bot - top - si, { fill: rc });
-      else SVG.rect(g, left - r, top, r, halfW * 2, { fill: rc });
-    }
-    if (arms.east) {
-      if (blocked === 'north') SVG.rect(g, right, top + si, r, bot - top - si, { fill: rc });
-      else if (blocked === 'south') SVG.rect(g, right, top, r, bot - top - si, { fill: rc });
-      else SVG.rect(g, right, top, r, halfW * 2, { fill: rc });
+      // Arm extensions — mask road markings up to the radius point
+      // For T-junctions, only extend on the side-road half
+      if (arms.north) {
+        if (blocked === 'west') SVG.rect(g, left + si, top - r, right - left - si, r, { fill: rc });
+        else if (blocked === 'east') SVG.rect(g, left, top - r, right - left - si, r, { fill: rc });
+        else SVG.rect(g, left, top - r, halfH * 2, r, { fill: rc });
+      }
+      if (arms.south) {
+        if (blocked === 'west') SVG.rect(g, left + si, bot, right - left - si, r, { fill: rc });
+        else if (blocked === 'east') SVG.rect(g, left, bot, right - left - si, r, { fill: rc });
+        else SVG.rect(g, left, bot, halfH * 2, r, { fill: rc });
+      }
+      if (arms.west) {
+        if (blocked === 'north') SVG.rect(g, left - r, top + si, r, bot - top - si, { fill: rc });
+        else if (blocked === 'south') SVG.rect(g, left - r, top, r, bot - top - si, { fill: rc });
+        else SVG.rect(g, left - r, top, r, halfW * 2, { fill: rc });
+      }
+      if (arms.east) {
+        if (blocked === 'north') SVG.rect(g, right, top + si, r, bot - top - si, { fill: rc });
+        else if (blocked === 'south') SVG.rect(g, right, top, r, bot - top - si, { fill: rc });
+        else SVG.rect(g, right, top, r, halfW * 2, { fill: rc });
+      }
     }
 
     // Corner carving — fill r×r square, carve quarter circle with grass
@@ -475,7 +588,7 @@ const Intersections = (() => {
   }
 
 
-  return { fourWay, tJunction, junction };
+  return { fourWay, tJunction, turn, junction };
 })();
 
 

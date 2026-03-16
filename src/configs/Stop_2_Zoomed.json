@@ -5,14 +5,14 @@
     {
       "id": "vertical",
       "orientation": "vertical",
-      "center": 528.5,
+      "center": 264.25,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     },
     {
       "id": "horizontal",
       "orientation": "horizontal",
-      "center": 408.5,
+      "center": 204.25,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     }

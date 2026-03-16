@@ -182,13 +182,6 @@
       "rotation": -45,
       "color": "green",
       "size": "medium"
-    },
-    {
-      "x": 520.5,
-      "y": 228.5,
-      "direction": "east",
-      "color": "yellow",
-      "size": "large"
     }
   ]
 }

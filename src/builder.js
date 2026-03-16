@@ -140,28 +140,34 @@
     refreshProps();
   }
 
-  /** Scale canvas-inner to fit the wrapper, applying zoom on top. */
+  /** Size the SVG to fit the wrapper at zoom=1, scale up/down with zoom. */
   function fitCanvas() {
     const wrapper = document.getElementById('canvas-wrapper');
-    const inner = document.getElementById('canvas-inner');
     const svg = document.querySelector('#diagram-container svg');
-    if (!wrapper || !inner || !svg) return;
+    const ov = document.getElementById('overlay');
+    if (!wrapper || !svg) return;
 
-    const svgW = parseFloat(svg.getAttribute('width')) || state.config.canvas.width;
-    const svgH = parseFloat(svg.getAttribute('height')) || state.config.canvas.height;
+    const natW = state.config.canvas.width;
+    const natH = state.config.canvas.height;
     const wrapW = wrapper.clientWidth;
     const wrapH = wrapper.clientHeight;
 
-    // Base scale: fit diagram into wrapper
-    const baseScale = Math.min(wrapW / svgW, wrapH / svgH, 1);
+    // At zoom=1, fit the full diagram into the wrapper
+    const fitScale = Math.min(wrapW / natW, wrapH / natH);
     const zoom = state.uiZoom || 1;
-    const scale = baseScale * zoom;
+    const displayW = natW * fitScale * zoom;
+    const displayH = natH * fitScale * zoom;
 
-    inner.style.transform = 'scale(' + scale + ')';
-    inner.style.transformOrigin = 'center center';
+    // Set actual pixel dimensions — no CSS transform needed
+    svg.setAttribute('width', displayW);
+    svg.setAttribute('height', displayH);
+    if (ov) {
+      ov.setAttribute('width', displayW);
+      ov.setAttribute('height', displayH);
+    }
 
-    // Allow scrolling when zoomed past the wrapper bounds
-    wrapper.style.overflow = (scale * svgW > wrapW || scale * svgH > wrapH) ? 'auto' : 'hidden';
+    // Scroll when larger than wrapper, otherwise no overflow
+    wrapper.style.overflow = (displayW > wrapW || displayH > wrapH) ? 'auto' : 'hidden';
   }
 
   /* ================================================================
@@ -451,18 +457,19 @@
     const roadId = genId('road');
 
     let road;
+    const bleed = 5; // extend past canvas edge to hide line ends
     if (side === 'north') {
       road = { id: roadId, orientation: 'vertical', center: cx + pos * halfW,
-               from: 0, to: cy - halfH, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
+               from: -bleed, to: cy - halfH, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
     } else if (side === 'south') {
       road = { id: roadId, orientation: 'vertical', center: cx + pos * halfW,
-               from: cy + halfH, to: cHeight, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
+               from: cy + halfH, to: cHeight + bleed, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
     } else if (side === 'west') {
       road = { id: roadId, orientation: 'horizontal', center: cy + pos * halfH,
-               from: 0, to: cx - halfW, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
+               from: -bleed, to: cx - halfW, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
     } else if (side === 'east') {
       road = { id: roadId, orientation: 'horizontal', center: cy + pos * halfH,
-               from: cx + halfW, to: cWidth, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
+               from: cx + halfW, to: cWidth + bleed, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
     }
     if (!road) return null;
 
@@ -630,8 +637,6 @@
 
     row(panel, 'X',  numInp(lot.x ?? 0,  v => mutate(() => lot.x = v)));
     row(panel, 'Y',  numInp(lot.y ?? 0,  v => mutate(() => lot.y = v)));
-    row(panel, 'Lane Gap', numInp(lot.laneGap ?? 100, v => mutate(() => lot.laneGap = v)));
-
     // ── Rows ──
     section(panel, 'Rows');
     (lot.rows || []).forEach((rw, ri) => {
@@ -647,27 +652,42 @@
       hdr.appendChild(rm);
       box.appendChild(hdr);
 
-      row(box, 'Type',   selInp(['single', 'double'], rw.type || 'single',
-        v => mutate(() => { rw.type = v; clearAutoSize(lot); })));
       row(box, 'Orient', selInp(['horizontal', 'vertical'], rw.orientation || 'horizontal',
         v => mutate(() => { rw.orientation = v; clearAutoSize(lot); })));
 
-      if (rw.orientation === 'vertical') {
+      // Combined type+direction
+      const isVert = rw.orientation === 'vertical';
+      const typeOpts = isVert
+        ? [{ value: 'half-left', label: 'Half - Left' }, { value: 'half-right', label: 'Half - Right' }, { value: 'double', label: 'Double' }]
+        : [{ value: 'half-up', label: 'Half - Up' }, { value: 'half-down', label: 'Half - Down' }, { value: 'double', label: 'Double' }];
+      // Derive current combined value
+      let typeVal = 'double';
+      if (rw.type === 'single') {
+        if (isVert) typeVal = 'half-' + (rw.direction || 'right');
+        else typeVal = 'half-' + (rw.direction || 'up');
+      }
+      row(box, 'Type', selInp(typeOpts, typeVal, v => mutate(() => {
+        if (v === 'double') {
+          rw.type = 'double'; delete rw.direction;
+        } else {
+          rw.type = 'single';
+          rw.direction = v.replace('half-', '');
+        }
+        clearAutoSize(lot);
+      })));
+
+      if (isVert) {
         row(box, 'Stalls', numInp(rw.stallsPerColumn || 1, v => mutate(() => { rw.stallsPerColumn = v; clearAutoSize(lot); })));
       } else {
         row(box, 'Stalls', numInp(rw.stallsPerRow || 1,    v => mutate(() => { rw.stallsPerRow = v; clearAutoSize(lot); })));
       }
-      row(box, 'Stall W', numInp(rw.stallWidth ?? 50,  v => mutate(() => { rw.stallWidth = v; clearAutoSize(lot); })));
-      row(box, 'Stall D', numInp(rw.stallDepth ?? 100, v => mutate(() => { rw.stallDepth = v; clearAutoSize(lot); })));
-      row(box, 'Dir', selInp(
-        rw.orientation === 'vertical' ? ['left', 'right'] : ['up', 'down'],
-        rw.direction || (rw.orientation === 'vertical' ? 'right' : 'up'),
-        v => mutate(() => rw.direction = v)));
-      row(box, 'Splits', textInp((rw.splits || []).join(', '),
+      const splitsInp = textInp((rw.splits || []).join(', '),
         v => mutate(() => {
           rw.splits = v.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
           clearAutoSize(lot);
-        })));
+        }));
+      splitsInp.placeholder = '5, 10';
+      row(box, 'Splits', splitsInp);
 
       panel.appendChild(box);
     });
@@ -676,7 +696,16 @@
     addR.className = 'btn btn-small'; addR.textContent = '+ Add Row';
     addR.onclick = () => mutate(() => {
       if (!lot.rows) lot.rows = [];
-      lot.rows.push({ type: 'single', orientation: 'horizontal', stallsPerRow: 5, stallWidth: 50, stallDepth: 100 });
+      const prev = lot.rows[lot.rows.length - 1];
+      const orient = prev?.orientation || 'horizontal';
+      const newRow = { type: 'double', orientation: orient };
+      if (orient === 'vertical') {
+        newRow.stallsPerColumn = prev?.stallsPerColumn || 5;
+      } else {
+        newRow.stallsPerRow = prev?.stallsPerRow || 5;
+      }
+      if (prev?.splits?.length) newRow.splits = prev.splits.slice();
+      lot.rows.push(newRow);
       clearAutoSize(lot);
     });
     panel.appendChild(addR);
@@ -1071,15 +1100,43 @@
       if (!r) return;
       if (r.orientation === 'vertical') r.center = Math.round(r.center + dx);
       else r.center = Math.round(r.center + dy);
+      // Move linked lot entrances with the road
+      const linked = cfg.entrances.find(e => e.road === r.id);
+      if (linked) {
+        cfg.parkingLots.forEach(lot => {
+          const ent = (lot.entrances || []).find(e => e.side === linked.side);
+          if (!ent) return;
+          if (r.orientation === 'vertical') lot.x = Math.round((lot.x ?? 0) + dx);
+          else lot.y = Math.round((lot.y ?? 0) + dy);
+        });
+      }
       drag.sx = pt.x; drag.sy = pt.y;
       detectIntersections();
       rerenderFast();
     } else if (type === 'lot') {
       const lot = cfg.parkingLots[index];
       if (!lot) return;
+      const rdx = Math.round(dx), rdy = Math.round(dy);
       lot.x = Math.round((lot.x ?? 0) + dx);
       lot.y = Math.round((lot.y ?? 0) + dy);
+      // Move linked entrance roads with the lot
+      (lot.entrances || []).forEach(ent => {
+        const linked = cfg.entrances.find(e => e.side === ent.side);
+        if (!linked) return;
+        const road = cfg.roads.find(r => r.id === linked.road);
+        if (!road) return;
+        if (road.orientation === 'vertical') {
+          road.center += rdx;
+          if (ent.side === 'north' && typeof road.to === 'number') road.to += rdy;
+          if (ent.side === 'south' && typeof road.from === 'number') road.from += rdy;
+        } else {
+          road.center += rdy;
+          if (ent.side === 'west' && typeof road.to === 'number') road.to += rdx;
+          if (ent.side === 'east' && typeof road.from === 'number') road.from += rdx;
+        }
+      });
       drag.sx = pt.x; drag.sy = pt.y;
+      detectIntersections();
       rerenderFast();
     } else if (type === 'vehicle') {
       const v = cfg.vehicles[index];
@@ -1107,8 +1164,8 @@
       if (typeof cfg.compass !== 'object') cfg.compass = {};
       const z = cfg.zoom || 1;
       const vbW = cfg.canvas.width / z, vbH = cfg.canvas.height / z;
-      cfg.compass.x = (cfg.compass.x ?? (vbW / 2 - 50)) + dx;
-      cfg.compass.y = (cfg.compass.y ?? (vbH / 2 - 50)) + dy;
+      cfg.compass.x = (cfg.compass.x ?? (vbW - 50)) + dx;
+      cfg.compass.y = (cfg.compass.y ?? (vbH - 50)) + dy;
       drag.sx = pt.x; drag.sy = pt.y;
       rerenderFast();
     }

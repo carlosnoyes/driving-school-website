@@ -215,6 +215,13 @@ const Diagram = (() => {
         }
       }
       ix.radius = ix.radius ?? d.radius;
+      // Derive blockedSides for turn type from openSides
+      if (ix.type === 'turn' && ix.openSides) {
+        const all = ['north', 'south', 'east', 'west'];
+        const openMap = { ne: ['north', 'east'], nw: ['north', 'west'], se: ['south', 'east'], sw: ['south', 'west'] };
+        const open = openMap[ix.openSides] || [];
+        ix.blockedSides = all.filter(s => !open.includes(s));
+      }
     });
 
     // Entrances — derive center, shoulder, radius from linked road
@@ -411,26 +418,20 @@ const Diagram = (() => {
 
     // 6. Intersections (fill the junction area + optional signals)
     junctions.forEach(ix => {
-      if (ix.type === 'fourWay') {
-        Intersections.fourWay(svg, ix.cx, ix.cy, ix.halfW, ix.halfH);
-      } else if (ix.type === 'tJunction') {
-        Intersections.tJunction(svg, ix.cx, ix.cy, ix.blockedSide, ix.halfW, ix.halfH);
-      }
-
-      // Junction overlay with rounded corners (if radius is specified)
+      // Build junction overlay options (shared by all types)
+      let junctionOpts = null;
       if (ix.radius != null) {
         const arms = { north: true, south: true, east: true, west: true };
         const noCurb = {};
         if (ix.blockedSide) {
           arms[ix.blockedSide] = false;
-          // T-junction: don't draw curb on blocked side — through-road handles it
           if (ix.type === 'tJunction') noCurb[ix.blockedSide] = true;
         }
-        if (ix.blockedSides) ix.blockedSides.forEach(s => { arms[s] = false; });
+        if (ix.blockedSides) ix.blockedSides.forEach(s => { arms[s] = false; noCurb[s] = true; });
         const jr0 = roadMap[ix.roads?.[0]];
         const jr1 = roadMap[ix.roads?.[1]];
         const jSh = Math.max(jr0?.shoulder ?? -1, jr1?.shoulder ?? -1);
-        Intersections.junction(svg, ix.cx, ix.cy, ix.halfH, ix.halfW, {
+        junctionOpts = {
           radius: ix.radius,
           arms,
           noCurb,
@@ -439,7 +440,29 @@ const Diagram = (() => {
           curbColor: ix.curbColor,
           curbWidth: ix.curbWidth,
           shoulder: jSh,
+        };
+      }
+
+      if (ix.type === 'fourWay') {
+        Intersections.fourWay(svg, ix.cx, ix.cy, ix.halfW, ix.halfH);
+        if (junctionOpts) Intersections.junction(svg, ix.cx, ix.cy, ix.halfH, ix.halfW, junctionOpts);
+      } else if (ix.type === 'tJunction') {
+        Intersections.tJunction(svg, ix.cx, ix.cy, ix.blockedSide, ix.halfW, ix.halfH);
+        if (junctionOpts) Intersections.junction(svg, ix.cx, ix.cy, ix.halfH, ix.halfW, junctionOpts);
+      } else if (ix.type === 'turn') {
+        // For turns: draw the curved road first, then junction corners on top
+        // (with noFill so the box fill doesn't cover the curved lines).
+        const tr0 = roadMap[ix.roads?.[0]];
+        const tr1 = roadMap[ix.roads?.[1]];
+        const turnRoad = tr0 || tr1 || {};
+        Intersections.turn(svg, ix.cx, ix.cy, ix.blockedSides || [], ix.halfW, ix.halfH, {
+          laneWidth: turnRoad.laneWidth,
+          lanesPerDirection: turnRoad.lanesPerDirection,
+          centerLineStyle: turnRoad.centerLineStyle,
+          shoulder: turnRoad.shoulder,
+          median: turnRoad.median,
         });
+        if (junctionOpts) Intersections.junction(svg, ix.cx, ix.cy, ix.halfH, ix.halfW, { ...junctionOpts, noFill: true });
       }
     });
 
@@ -556,18 +579,34 @@ const Diagram = (() => {
       shoulder: r.shoulder,
     };
 
-    // Collect clip ranges where tJunctions block this road
+    // Collect clip ranges where tJunctions/turns block this road
     const clips = [];
     junctions.forEach(jx => {
-      if (jx.type !== 'tJunction' || !jx.blockedSide) return;
       if (!(jx.roads || []).includes(r.id)) return;
-      const bs = jx.blockedSide;
-      if (r.orientation === 'vertical' && (bs === 'north' || bs === 'south')) {
-        if (bs === 'north') clips.push({ cut: 'before', at: jx.cy - jx.halfW });
-        else clips.push({ cut: 'after', at: jx.cy + jx.halfW });
-      } else if (r.orientation === 'horizontal' && (bs === 'west' || bs === 'east')) {
-        if (bs === 'west') clips.push({ cut: 'before', at: jx.cx - jx.halfH });
-        else clips.push({ cut: 'after', at: jx.cx + jx.halfH });
+
+      // tJunction: road extends through intersection, clip on blocked side's far edge
+      if (jx.type === 'tJunction' && jx.blockedSide) {
+        const bs = jx.blockedSide;
+        if (r.orientation === 'vertical' && (bs === 'north' || bs === 'south')) {
+          if (bs === 'north') clips.push({ cut: 'before', at: jx.cy - jx.halfW });
+          else clips.push({ cut: 'after', at: jx.cy + jx.halfW });
+        } else if (r.orientation === 'horizontal' && (bs === 'west' || bs === 'east')) {
+          if (bs === 'west') clips.push({ cut: 'before', at: jx.cx - jx.halfH });
+          else clips.push({ cut: 'after', at: jx.cx + jx.halfH });
+        }
+      }
+
+      // Turn: roads don't enter the intersection, clip at near edge
+      if (jx.type === 'turn' && jx.blockedSides) {
+        jx.blockedSides.forEach(bs => {
+          if (r.orientation === 'vertical' && (bs === 'north' || bs === 'south')) {
+            if (bs === 'south') clips.push({ cut: 'after', at: jx.cy - jx.halfW });
+            else clips.push({ cut: 'before', at: jx.cy + jx.halfW });
+          } else if (r.orientation === 'horizontal' && (bs === 'west' || bs === 'east')) {
+            if (bs === 'east') clips.push({ cut: 'after', at: jx.cx - jx.halfH });
+            else clips.push({ cut: 'before', at: jx.cx + jx.halfH });
+          }
+        });
       }
     });
 
