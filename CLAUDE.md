@@ -39,13 +39,45 @@ Two core files power the engine:
 
 ### JSON Config Structure
 
-Configs live in `src/configs/`. Each defines a complete diagram with sections: `canvas`, `zoom`, `defaults`, `roads`, `intersections`, `parkingLots`, `connectors`, `entrances`, `vehicles`, `decorations`. Stop lines and signals are sub-elements of `intersections[].stopLines[]` — each stop line has an `approach` direction and an optional `signal` object.
+Configs live in `src/configs/`. Each defines a complete diagram with sections: `canvas`, `defaults`, `roads`, `intersections`, `parkingLots`, `connectors`, `entrances`, `vehicles`, `decorations`. Stop lines and signals are sub-elements of `intersections[].stopLines[]` — each stop line has an `approach` direction and an optional `signal` object.
+
+#### Canvas Object
+
+The `canvas` object controls the diagram layout:
+
+- `paneWidth` / `paneHeight` — single pane dimensions (default 1057 x 817)
+- `columns` / `rows` — grid of panes (default 1 x 1). Total canvas = paneWidth x columns, paneHeight x rows
+- `zoom` — scale factor for the viewBox (default 1). Also supported as legacy top-level `zoom`
+- `grid` — show light grey dashed lines between panes (default false)
+- `compass` — show compass rose (default true). Also supported as legacy top-level `compass`
+
+#### Pane-Relative Positioning
+
+Roads and parking lots support pane-relative coordinates as alternatives to pixel values:
+
+- Roads: `centerPane`, `fromPane`, `toPane` — multiplied by the appropriate pane dimension and divided by zoom
+- Parking lots: `xPane`, `yPane` — multiplied by paneWidth/paneHeight and divided by zoom
+
+Example: `centerPane: 0.5` places a road at the center of the first pane. `centerPane: 1.5` places it at the center of the second pane (in a multi-column layout).
 
 ### Key Patterns
 
-- **Zoom scaling**: `applyDefaults()` multiplies all positional/dimensional values by the `zoom` factor
+- **Defaults pipeline**: `applyDefaults()` runs 9 focused transform functions in sequence: canvas → parking → roads → intersections → entrances → vehicles → stop lines → signals → vehicle positions
 - **Auto-derivation**: Intersection centers, stop line positions, and signal positions are auto-calculated from the intersection's roads and `approach` direction — many coordinates are optional
 - **No module bundler**: Plain JS with IIFE pattern, scripts attached to `window`
+
+### Builder (`src/builder.html`)
+
+Interactive diagram editor with drag-and-drop. Code is split into focused modules in `src/builder/`:
+
+- `state.js` — shared state, undo/redo, utilities
+- `canvas.js` — sizing, zoom, render loop
+- `overlay.js` — hit-targets, selection highlight
+- `elements.js` — left sidebar element list
+- `props.js` — right sidebar property panels, intersection detection
+- `drag.js` — mouse drag, arrow-key nudge
+- `tools.js` — placement modes, vehicle snap
+- `io.js` — import/export JSON/PNG, JSON editor
 
 ### Viewer UI (`src/viewer.html`)
 

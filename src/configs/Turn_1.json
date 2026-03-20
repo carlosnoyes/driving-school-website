@@ -4,16 +4,16 @@
     {
       "id": "vertical_road",
       "orientation": "vertical",
-      "center": 528.5,
-      "to": 408.5,
+      "centerPane": 0.5,
+      "toPane": 0.5,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     },
     {
       "id": "horizontal_road",
       "orientation": "horizontal",
-      "center": 408.5,
-      "from": 528.5,
+      "centerPane": 0.5,
+      "fromPane": 0.5,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     }

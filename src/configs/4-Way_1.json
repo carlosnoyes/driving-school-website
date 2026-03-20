@@ -4,7 +4,7 @@
     {
       "id": "vertical",
       "orientation": "vertical",
-      "center": 528.5,
+      "centerPane": 0.5,
       "lanesPerDirection": 2,
       "laneLine": "dashed",
       "median": 12
@@ -12,7 +12,7 @@
     {
       "id": "horizontal",
       "orientation": "horizontal",
-      "center": 408.5,
+      "centerPane": 0.5,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     }

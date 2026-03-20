@@ -1,5 +1,7 @@
 # Refactor Plan: Align JS Architecture with Builder UX
 
+## Status: COMPLETE (Phases 1-3 done, Phase 4 deferred, Phase 5 not needed)
+
 ## Problem Summary
 
 The builder HTML is cleanly structured — toolbar, element list, canvas, properties panel, status bar — each section has a clear purpose and boundary. The JavaScript behind it doesn't match that clarity:

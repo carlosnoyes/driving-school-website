@@ -74,6 +74,15 @@
 
   <script src="primitives.js"></script>
   <script src="diagram.js"></script>
+  <!-- Builder modules (load order matters: state first, init last) -->
+  <script src="builder/state.js"></script>
+  <script src="builder/canvas.js"></script>
+  <script src="builder/overlay.js"></script>
+  <script src="builder/elements.js"></script>
+  <script src="builder/props.js"></script>
+  <script src="builder/drag.js"></script>
+  <script src="builder/tools.js"></script>
+  <script src="builder/io.js"></script>
   <script src="builder.js"></script>
 </body>
 </html>

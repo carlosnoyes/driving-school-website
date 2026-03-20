@@ -3,8 +3,8 @@
   "parkingLots": [
     {
       "id": "lot1",
-      "x": 578.5,
-      "y": 408.5,
+      "xPane": 0.5473,
+      "yPane": 0.5,
       "edgeMargin": "close",
       "entrances": [
         {
@@ -42,7 +42,7 @@
     {
       "id": "street",
       "orientation": "vertical",
-      "center": 86.5,
+      "centerPane": 0.0818,
       "laneLine": "none",
       "centerLineStyle": "double-yellow"
     },
@@ -176,8 +176,8 @@
       "size": "medium"
     },
     {
-      "x": 110.5,
-      "y": 433.5,
+      "xPane": 0.1045,
+      "yPane": 0.5306,
       "direction": "east",
       "rotation": -45,
       "color": "green",
