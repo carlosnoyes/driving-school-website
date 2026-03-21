@@ -3,7 +3,8 @@
 (function () {
   'use strict';
 
-  const SNAP_DISTANCE = 30;
+  const PX = Diagram.RESOLUTION_SCALE;
+  const SNAP_DISTANCE = 30 * PX;
 
   /** Handle overlay clicks: placement modes or select. */
   function onOverlayClick(e) {
@@ -18,7 +19,7 @@
           id: Builder.genId('road'),
           orientation: 'vertical',
           center: Math.round(pt.x),
-          lanesPerDirection: 1, laneWidth: 50, shoulder: 10,
+          lanesPerDirection: 1, laneWidth: Diagram.DEFAULTS.laneWidth, shoulder: Diagram.DEFAULTS.shoulder,
         });
       });
       state.selected = { type: 'road', index: state.config.roads.length - 1 };
@@ -69,7 +70,7 @@
 
     // Try road lanes
     cfg.roads.forEach(road => {
-      const lw = road.laneWidth || 50;
+      const lw = road.laneWidth || Roads.D.laneWidth;
       const lpd = road.lanesPerDirection || 1;
       const cH = cfg.canvas.height, cW = cfg.canvas.width;
 
@@ -104,7 +105,8 @@
       state.processed.parkingLots.forEach((lot, li) => {
         if (!lot._x || !(x >= lot._x && x <= lot._x + lot.width && y >= lot._y && y <= lot._y + lot.height)) return;
         (lot.rows || []).forEach((rw, ri) => {
-          const sw = rw.stallWidth || 50, sd = rw.stallDepth || 100;
+          const sw = rw.stallWidth || Diagram.DEFAULTS.stallWidth;
+          const sd = rw.stallDepth || Diagram.DEFAULTS.stallDepth;
           const rx = rw.x ?? lot._x + (rw.offsetX || 0);
           const ry = rw.y ?? lot._y + (rw.offsetY || 0);
           const isV = rw.orientation === 'vertical';

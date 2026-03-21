@@ -5,12 +5,15 @@ const Builder = (() => {
   'use strict';
 
   const MAX_UNDO = 50;
+  const PX = Diagram.RESOLUTION_SCALE;
+  const BASE_W = Diagram.BASE_PANE_W;
+  const BASE_H = Diagram.BASE_PANE_H;
 
   /* ── State ── */
   const state = {
     config: {
       title: 'New Diagram',
-      canvas: { width: 1057, height: 817 },
+      canvas: { width: BASE_W, height: BASE_H },
       zoom: 1,
       roads: [],
       intersections: [],
@@ -19,7 +22,7 @@ const Builder = (() => {
       entrances: [],
       vehicles: [],
       decorations: [],
-      compass: { size: 30 },
+      compass: { size: 30 * PX },
     },
     selected: null,   // { type, index }
     mode: 'select',   // 'select' | 'addRoad' | 'addLot' | 'addVehicle'
@@ -52,7 +55,7 @@ const Builder = (() => {
 
   function roadHalfWidth(r) {
     return Roads.roadWidth(
-      r.laneWidth || 50,
+      r.laneWidth || Roads.D.laneWidth,
       r.lanesPerDirection || 1,
       r.median || 0,
       r.shoulder

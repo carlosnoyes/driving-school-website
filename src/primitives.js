@@ -1,6 +1,9 @@
 // primitives.js — Shared SVG drawing primitives for driving school diagrams
 // All modules are plain IIFEs attached to `window`, no build step needed.
 
+const RESOLUTION_SCALE = 2;
+const AREA_SCALE = RESOLUTION_SCALE * RESOLUTION_SCALE;
+
 /* ───────────────────────────── SVG CORE ───────────────────────────── */
 
 const SVG = (() => {
@@ -57,15 +60,21 @@ const Terrain = (() => {
     const g = SVG.group(p);
     SVG.rect(g, x, y, w, h, { fill: C.grass });
     const rng = SVG.seedRandom(x * 7 + y * 13);
-    const n = Math.floor((w * h) / 4000);
+    const n = Math.floor((w * h) / (4000 * AREA_SCALE));
     for (let i = 0; i < n; i++) {
-      SVG.rect(g, x + rng() * w - 10, y + rng() * h - 8, 15 + rng() * 30, 10 + rng() * 20,
-        { fill: C.grassAlt, rx: 6, ry: 6, opacity: 0.4 + rng() * 0.3 });
+      SVG.rect(
+        g,
+        x + rng() * w - 10 * RESOLUTION_SCALE,
+        y + rng() * h - 8 * RESOLUTION_SCALE,
+        (15 + rng() * 30) * RESOLUTION_SCALE,
+        (10 + rng() * 20) * RESOLUTION_SCALE,
+        { fill: C.grassAlt, rx: 6 * RESOLUTION_SCALE, ry: 6 * RESOLUTION_SCALE, opacity: 0.4 + rng() * 0.3 }
+      );
     }
     return g;
   }
 
-  function bush(p, cx, cy, size = 10) {
+  function bush(p, cx, cy, size = 10 * RESOLUTION_SCALE) {
     const g = SVG.group(p);
     SVG.circle(g, cx, cy, size, { fill: C.bush });
     SVG.circle(g, cx - size * 0.5, cy - size * 0.3, size * 0.7, { fill: C.bushLight });
@@ -74,9 +83,9 @@ const Terrain = (() => {
     return g;
   }
 
-  function tree(p, cx, cy, size = 14) {
+  function tree(p, cx, cy, size = 14 * RESOLUTION_SCALE) {
     const g = SVG.group(p);
-    SVG.rect(g, cx - 2, cy, 4, size * 0.6, { fill: C.trunk, rx: 1 });
+    SVG.rect(g, cx - 2 * RESOLUTION_SCALE, cy, 4 * RESOLUTION_SCALE, size * 0.6, { fill: C.trunk, rx: 1 * RESOLUTION_SCALE });
     SVG.circle(g, cx, cy - size * 0.1, size, { fill: C.tree });
     SVG.circle(g, cx - size * 0.4, cy + size * 0.2, size * 0.7, { fill: C.bush });
     SVG.circle(g, cx + size * 0.4, cy + size * 0.1, size * 0.65, { fill: C.tree });
@@ -85,24 +94,24 @@ const Terrain = (() => {
 
   function plant(p, cx, cy) {
     const g = SVG.group(p);
-    SVG.circle(g, cx, cy, 3, { fill: '#5a9a50' });
-    SVG.circle(g, cx, cy, 1.5, { fill: '#7ab870' });
+    SVG.circle(g, cx, cy, 3 * RESOLUTION_SCALE, { fill: '#5a9a50' });
+    SVG.circle(g, cx, cy, 1.5 * RESOLUTION_SCALE, { fill: '#7ab870' });
     return g;
   }
 
   function fillArea(p, x, y, w, h, opts = {}) {
     if (w <= 0 || h <= 0) return SVG.group(p);
-    const margin = opts.margin ?? 15;
+    const margin = opts.margin ?? (15 * RESOLUTION_SCALE);
     const g = SVG.group(p);
     grass(g, x, y, w, h);
     const rng = SVG.seedRandom(x * 31 + y * 17 + w * 3);
     const ix = x + margin, iy = y + margin, iw = w - margin * 2, ih = h - margin * 2;
     if (iw <= 0 || ih <= 0) return g;
-    for (let i = 0, n = Math.floor((iw * ih) / 6000) + 2; i < n; i++)
-      bush(g, ix + rng() * iw, iy + rng() * ih, 6 + rng() * 8);
-    for (let i = 0, n = Math.floor((iw * ih) / 12000) + 1; i < n; i++)
-      tree(g, ix + rng() * iw, iy + rng() * ih, 8 + rng() * 10);
-    for (let i = 0, n = Math.floor((iw * ih) / 3000); i < n; i++)
+    for (let i = 0, n = Math.floor((iw * ih) / (6000 * AREA_SCALE)) + 2; i < n; i++)
+      bush(g, ix + rng() * iw, iy + rng() * ih, (6 + rng() * 8) * RESOLUTION_SCALE);
+    for (let i = 0, n = Math.floor((iw * ih) / (12000 * AREA_SCALE)) + 1; i < n; i++)
+      tree(g, ix + rng() * iw, iy + rng() * ih, (8 + rng() * 10) * RESOLUTION_SCALE);
+    for (let i = 0, n = Math.floor((iw * ih) / (3000 * AREA_SCALE)); i < n; i++)
       plant(g, ix + rng() * iw, iy + rng() * ih);
     return g;
   }
@@ -115,10 +124,10 @@ const Terrain = (() => {
 
 const Roads = (() => {
   const D = {
-    laneWidth: 50, roadColor: '#333333',
+    laneWidth: 50 * RESOLUTION_SCALE, roadColor: '#333333',
     lineColor: '#fff', centerColor: '#ddcc00',
-    centerWidth: 2, laneLineWidth: 1.5,
-    dashLen: 20, dashGap: 15,
+    centerWidth: 2 * RESOLUTION_SCALE, laneLineWidth: 1.5 * RESOLUTION_SCALE,
+    dashLen: 20 * RESOLUTION_SCALE, dashGap: 15 * RESOLUTION_SCALE,
   };
 
   function dashedLine(p, x1, y1, x2, y2, o = {}) {
@@ -140,7 +149,7 @@ const Roads = (() => {
       solidLine(p, x1, y1, x2, y2, { color: D.centerColor });
     } else if (style === 'double-yellow') {
       const isVert = (x1 === x2);
-      const off = 2;
+      const off = 2 * RESOLUTION_SCALE;
       if (isVert) {
         solidLine(p, x1 - off, y1, x2 - off, y2, { color: D.centerColor });
         solidLine(p, x1 + off, y1, x2 + off, y2, { color: D.centerColor });
@@ -214,7 +223,7 @@ const Roads = (() => {
     const sh = opts.shoulder ?? -1;   // -1 means no shoulder at all
     const rc = opts.roadColor || D.roadColor;
     const lanesW = lw * lpd;         // width of lanes on one side
-    const center = med > 0 ? 0 : 1;  // 1px center pixel when no median
+    const center = med > 0 ? 0 : RESOLUTION_SCALE;  // center spacer when no median
     const totalW = lanesW * 2 + med + center + (sh > 0 ? sh * 2 : 0);
     const left = cx - totalW / 2;
     const g = SVG.group(p);
@@ -271,7 +280,7 @@ const Roads = (() => {
     const sh = opts.shoulder ?? -1;
     const rc = opts.roadColor || D.roadColor;
     const lanesW = lw * lpd;
-    const center = med > 0 ? 0 : 1;  // 1px center pixel when no median
+    const center = med > 0 ? 0 : RESOLUTION_SCALE;  // center spacer when no median
     const totalW = lanesW * 2 + med + center + (sh > 0 ? sh * 2 : 0);
     const top = cy - totalW / 2;
     const g = SVG.group(p);
@@ -324,7 +333,7 @@ const Roads = (() => {
     const lpd = lanesPerDirection || 1;
     const med = median || 0;
     const sh = (shoulder != null && shoulder >= 0) ? shoulder : 0;
-    const center = med > 0 ? 0 : 1;  // 1px center pixel when no median
+    const center = med > 0 ? 0 : RESOLUTION_SCALE;  // center spacer when no median
     return lw * lpd * 2 + med + center + (sh > 0 ? sh * 2 : 0);
   }
 
@@ -424,7 +433,7 @@ const Intersections = (() => {
     const cls = opts.centerLineStyle || 'double-yellow';
     if (cls !== 'none') {
       if (cls === 'double-yellow') {
-        for (const dr of [-2, 2]) {
+        for (const dr of [-2 * RESOLUTION_SCALE, 2 * RESOLUTION_SCALE]) {
           const r = hw + dr;
           SVG.path(g, arc(r, vPt(r), hPt(r)),
             { fill: 'none', stroke: Roads.D.centerColor, 'stroke-width': Roads.D.centerWidth });
@@ -448,7 +457,7 @@ const Intersections = (() => {
         SVG.path(g, arc(rIn, vPt(rIn), hPt(rIn)),
           { fill: 'none', stroke: '#fff', 'stroke-width': Roads.D.laneLineWidth,
             'stroke-dasharray': Roads.D.dashLen + ',' + Roads.D.dashGap });
-        const rOut = hw + 2 + i * lw;
+        const rOut = hw + 2 * RESOLUTION_SCALE + i * lw;
         SVG.path(g, arc(rOut, vPt(rOut), hPt(rOut)),
           { fill: 'none', stroke: '#fff', 'stroke-width': Roads.D.laneLineWidth,
             'stroke-dasharray': Roads.D.dashLen + ',' + Roads.D.dashGap });
@@ -467,11 +476,11 @@ const Intersections = (() => {
    * @param {object} opts - radius, arms, roadColor, curbColor, curbWidth
    */
   function junction(p, cx, cy, halfH, halfW, opts = {}) {
-    const r = opts.radius ?? 20;
+    const r = opts.radius ?? (20 * RESOLUTION_SCALE);
     const rc = opts.roadColor || Roads.D.roadColor;
     const arms = opts.arms || { north: true, south: true, east: true, west: true };
     const curbColor = opts.curbColor || '#ccc';
-    const curbWidth = opts.curbWidth || 3;
+    const curbWidth = opts.curbWidth || (3 * RESOLUTION_SCALE);
     const sh = opts.shoulder || 0;
     const noCurb = opts.noCurb || {};
     const g = SVG.group(p);
@@ -486,7 +495,7 @@ const Intersections = (() => {
     // Skip for turns — the turn function handles the road surface.
     if (!opts.noFill) {
       // For T-junctions, fill from just past the far shoulder line to the open side
-      const si = sh + 1; // shoulder inset — clear past the shoulder line thickness
+      const si = sh + RESOLUTION_SCALE; // shoulder inset — clear past the shoulder line thickness
       if (blocked === 'west') {
         SVG.rect(g, left + si, top, right - left - si, halfW * 2, { fill: rc });
       } else if (blocked === 'east') {
@@ -603,11 +612,17 @@ const Vehicles = (() => {
   function car(p, cx, cy, opts = {}) {
     const color = COLORS[opts.color] || opts.color || COLORS.default;
     const dir = opts.direction || 'north';
-    const cw = opts.width || 24, ch = opts.height || 40;
+    const cw = opts.width || (24 * RESOLUTION_SCALE), ch = opts.height || (40 * RESOLUTION_SCALE);
     const g = SVG.group(p);
     const w = (dir === 'north' || dir === 'south') ? cw : ch;
     const h = (dir === 'north' || dir === 'south') ? ch : cw;
-    SVG.rect(g, cx - w / 2, cy - h / 2, w, h, { fill: color, stroke: '#555', 'stroke-width': 1.5, rx: 5, ry: 5 });
+    SVG.rect(g, cx - w / 2, cy - h / 2, w, h, {
+      fill: color,
+      stroke: '#555',
+      'stroke-width': 1.5 * RESOLUTION_SCALE,
+      rx: 5 * RESOLUTION_SCALE,
+      ry: 5 * RESOLUTION_SCALE,
+    });
     if (opts.rotation) g.setAttribute('transform', `rotate(${opts.rotation}, ${cx}, ${cy})`);
     return g;
   }
@@ -622,7 +637,7 @@ const Signals = (() => {
   function trafficLight(p, x, y, opts = {}) {
     const dir = opts.direction || 'east';
     const active = opts.activeLight || 'red';
-    const sc = opts.scale || 1;
+    const sc = (opts.scale ?? RESOLUTION_SCALE) * 1.25;
     const g = SVG.group(p);
     const w = 16 * sc, h = 42 * sc, r = 5 * sc, pad = 3 * sc;
 
@@ -632,40 +647,64 @@ const Signals = (() => {
     else if (dir === 'north') rot = 270;
     g.setAttribute('transform', `rotate(${rot}, ${x}, ${y})`);
 
-    SVG.rect(g, x - w / 2, y - h / 2, w, h, { fill: '#333', stroke: '#222', 'stroke-width': 1, rx: 3 });
+    SVG.rect(g, x - w / 2, y - h / 2, w, h, {
+      fill: '#333',
+      stroke: '#222',
+      'stroke-width': 1 * sc,
+      rx: 3 * sc,
+    });
 
     const off = { red: '#661111', yellow: '#665511', green: '#116611' };
     const on  = { red: '#ff2222', yellow: '#ffcc00', green: '#22ff44' };
     ['red', 'yellow', 'green'].forEach((c, i) => {
       const ly = y - h / 2 + pad + r + i * (r * 2 + pad);
-      SVG.circle(g, x, ly, r, { fill: c === active ? on[c] : off[c], stroke: '#111', 'stroke-width': 0.5 });
+      SVG.circle(g, x, ly, r, { fill: c === active ? on[c] : off[c], stroke: '#111', 'stroke-width': 0.5 * sc });
+    });
+
+    return g;
+  }
+
+  function drawStopSign(p, x, y, opts = {}) {
+    const sc = opts.scale ?? (1.5 * RESOLUTION_SCALE);
+    const size = 14 * sc;
+    const rot = opts.rotation || 0;
+    const g = SVG.group(p);
+    if (rot) g.setAttribute('transform', `rotate(${rot}, ${x}, ${y})`);
+
+    const pts = [];
+    for (let i = 0; i < 8; i++) {
+      const a = Math.PI / 8 + i * Math.PI / 4;
+      pts.push(`${x + size * Math.cos(a)},${y + size * Math.sin(a)}`);
+    }
+    SVG.append(g, 'polygon', { points: pts.join(' '), fill: '#cc0000', stroke: '#880000', 'stroke-width': 1 * sc });
+
+    const lines = opts.lines || [{ text: 'STOP', dy: 3 * sc, size: 7 * sc }];
+    lines.forEach(line => {
+      SVG.text(g, x, y + line.dy, line.text, {
+        fill: 'white', 'font-size': line.size, 'font-weight': 'bold',
+        'text-anchor': 'middle', 'font-family': 'Arial, sans-serif',
+      });
     });
 
     return g;
   }
 
   function stopSign(p, x, y, opts = {}) {
-    // (x, y) = octagon center
-    const sc = opts.scale || 1;
-    const size = 14 * sc;
-    const rot = opts.rotation || 0;
-    const g = SVG.group(p);
-    if (rot) g.setAttribute('transform', `rotate(${rot}, ${x}, ${y})`);
-    // Octagon
-    const pts = [];
-    for (let i = 0; i < 8; i++) {
-      const a = Math.PI / 8 + i * Math.PI / 4;
-      pts.push(`${x + size * Math.cos(a)},${y + size * Math.sin(a)}`);
-    }
-    SVG.append(g, 'polygon', { points: pts.join(' '), fill: '#cc0000', stroke: '#880000', 'stroke-width': 1 });
-    SVG.text(g, x, y + 3 * sc, 'STOP', {
-      fill: 'white', 'font-size': 7 * sc, 'font-weight': 'bold',
-      'text-anchor': 'middle', 'font-family': 'Arial, sans-serif',
-    });
-    return g;
+    return drawStopSign(p, x, y, opts);
   }
 
-  return { trafficLight, stopSign };
+  function stopSign4Way(p, x, y, opts = {}) {
+    const sc = opts.scale ?? (1.5 * RESOLUTION_SCALE);
+    return drawStopSign(p, x, y, {
+      ...opts,
+      lines: [
+        { text: 'STOP', dy: 0, size: 6.5 * sc },
+        { text: '4-WAY', dy: 6.5 * sc, size: 3.6 * sc },
+      ],
+    });
+  }
+
+  return { trafficLight, stopSign, stopSign4Way };
 })();
 
 
@@ -673,8 +712,8 @@ const Signals = (() => {
 
 const Parking = (() => {
   const D = {
-    lineColor: '#ffffff', lineWidth: 1.5,
-    surfaceColor: '#555555', borderColor: '#cccccc', borderWidth: 2,
+    lineColor: '#ffffff', lineWidth: 1.5 * RESOLUTION_SCALE,
+    surfaceColor: '#555555', borderColor: '#cccccc', borderWidth: 2 * RESOLUTION_SCALE,
   };
 
   function stall(p, x, y, opts = {}) {
@@ -746,13 +785,13 @@ const Parking = (() => {
     (opts.entrances || []).forEach(ent => {
       const half = ent.laneGap / 2;
       if (ent.side === 'west') {
-        SVG.line(g, x, ent.y - half, x, ent.y + half, { stroke: sc, 'stroke-width': bw + 2 });
+        SVG.line(g, x, ent.y - half, x, ent.y + half, { stroke: sc, 'stroke-width': bw + 2 * RESOLUTION_SCALE });
       } else if (ent.side === 'east') {
-        SVG.line(g, x + w, ent.y - half, x + w, ent.y + half, { stroke: sc, 'stroke-width': bw + 2 });
+        SVG.line(g, x + w, ent.y - half, x + w, ent.y + half, { stroke: sc, 'stroke-width': bw + 2 * RESOLUTION_SCALE });
       } else if (ent.side === 'north') {
-        SVG.line(g, ent.x - half, y, ent.x + half, y, { stroke: sc, 'stroke-width': bw + 2 });
+        SVG.line(g, ent.x - half, y, ent.x + half, y, { stroke: sc, 'stroke-width': bw + 2 * RESOLUTION_SCALE });
       } else if (ent.side === 'south') {
-        SVG.line(g, ent.x - half, y + h, ent.x + half, y + h, { stroke: sc, 'stroke-width': bw + 2 });
+        SVG.line(g, ent.x - half, y + h, ent.x + half, y + h, { stroke: sc, 'stroke-width': bw + 2 * RESOLUTION_SCALE });
       }
     });
     return g;
@@ -765,16 +804,16 @@ const Parking = (() => {
 /* ──────────────────────── COMPASS ROSE ───────────────────────────── */
 
 const Compass = (() => {
-  function draw(p, cx, cy, size = 30) {
+  function draw(p, cx, cy, size = 30 * RESOLUTION_SCALE) {
     const g = SVG.group(p);
     const s = size;
     // Cross arrows
     // Vertical arrow (N-S)
-    SVG.line(g, cx, cy - s, cx, cy + s, { stroke: '#333', 'stroke-width': 1.5 });
+    SVG.line(g, cx, cy - s, cx, cy + s, { stroke: '#333', 'stroke-width': 1.5 * RESOLUTION_SCALE });
     // Horizontal arrow (E-W)
-    SVG.line(g, cx - s, cy, cx + s, cy, { stroke: '#333', 'stroke-width': 1.5 });
+    SVG.line(g, cx - s, cy, cx + s, cy, { stroke: '#333', 'stroke-width': 1.5 * RESOLUTION_SCALE });
     // Arrowheads
-    const ah = 6;
+    const ah = 6 * RESOLUTION_SCALE;
     // North
     SVG.path(g, `M ${cx} ${cy - s} L ${cx - ah} ${cy - s + ah} L ${cx + ah} ${cy - s + ah} Z`, { fill: '#333' });
     // South

@@ -3,6 +3,8 @@
 (function () {
   'use strict';
 
+  const PX = Diagram.RESOLUTION_SCALE;
+
   let drag = null;
   let lastRender = 0;
 
@@ -28,7 +30,7 @@
 
     const pt = Builder.svgPoint(e);
     const dx = pt.x - drag.sx, dy = pt.y - drag.sy;
-    if (!drag.moved && Math.abs(dx) < 3 && Math.abs(dy) < 3) return;
+    if (!drag.moved && Math.abs(dx) < 3 * PX && Math.abs(dy) < 3 * PX) return;
     drag.moved = true;
 
     const cfg = Builder.state.config;
@@ -106,8 +108,8 @@
       if (typeof cfg.compass !== 'object') cfg.compass = {};
       const z = cfg.zoom || 1;
       const vbW = cfg.canvas.width / z, vbH = cfg.canvas.height / z;
-      cfg.compass.x = (cfg.compass.x ?? (vbW - 50)) + dx;
-      cfg.compass.y = (cfg.compass.y ?? (vbH - 50)) + dy;
+      cfg.compass.x = (cfg.compass.x ?? (vbW - 50 * PX)) + dx;
+      cfg.compass.y = (cfg.compass.y ?? (vbH - 50 * PX)) + dy;
       drag.sx = pt.x; drag.sy = pt.y;
       Builder.rerenderFast();
     }
@@ -121,7 +123,7 @@
   function nudge(e) {
     const state = Builder.state;
     if (!state.selected) return;
-    const step = e.shiftKey ? 10 : 1;
+    const step = e.shiftKey ? 10 * PX : PX;
     const dx = e.key === 'ArrowRight' ? step : e.key === 'ArrowLeft' ? -step : 0;
     const dy = e.key === 'ArrowDown'  ? step : e.key === 'ArrowUp'   ? -step : 0;
     const { type, index } = state.selected;

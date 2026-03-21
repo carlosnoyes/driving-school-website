@@ -26,17 +26,19 @@
         {
           "type": "double",
           "orientation": "vertical",
-          "stallsPerColumn": 12,
+          "stallsPerColumn": 8,
           "splits": [
-            6
+            0,
+            4
           ]
         },
         {
           "type": "double",
           "orientation": "vertical",
-          "stallsPerColumn": 12,
+          "stallsPerColumn": 8,
           "splits": [
-            6
+            0,
+            4
           ]
         },
         {

@@ -4,32 +4,36 @@
 // Depends on: primitives.js (SVG, Terrain, Roads, Intersections, Vehicles, Signals, Parking, Compass)
 
 const Diagram = (() => {
+  const RESOLUTION_SCALE = 2;
+  const oddScale = value => (Number.isInteger(value) && value % 2 === 1)
+    ? value * RESOLUTION_SCALE - (RESOLUTION_SCALE - 1)
+    : value * RESOLUTION_SCALE;
 
   /* ── Default values ── */
   const DEFAULTS = {
-    laneWidth: 50,
-    shoulder: 10,
-    radius: 25,
-    stallWidth: 50,
-    stallDepth: 100,
-    laneGap: 100,           // driving-lane width in parking lots (2 × laneWidth)
-    vehicleWidth: 30,      // 0.6 × laneWidth
-    vehicleHeight: 75,     // 1.5 × laneWidth (medium)
+    laneWidth: 50 * RESOLUTION_SCALE,
+    shoulder: 10 * RESOLUTION_SCALE,
+    radius: 25 * RESOLUTION_SCALE,
+    stallWidth: 50 * RESOLUTION_SCALE,
+    stallDepth: 100 * RESOLUTION_SCALE,
+    laneGap: 100 * RESOLUTION_SCALE,           // driving-lane width in parking lots (2 × laneWidth)
+    vehicleWidth: 30 * RESOLUTION_SCALE,      // 0.6 × laneWidth
+    vehicleHeight: 75 * RESOLUTION_SCALE,     // 1.5 × laneWidth (medium)
   };
 
   // Vehicle sizes: width is always 0.6 × laneWidth, length varies
   const VEHICLE_SIZES = {
-    small:  { width: 30, height: 60 },   // 1.2 × laneWidth
-    medium: { width: 30, height: 75 },   // 1.5 × laneWidth
-    large:  { width: 30, height: 90 },   // 1.8 × laneWidth
+    small:  { width: 30 * RESOLUTION_SCALE, height: 60 * RESOLUTION_SCALE },   // 1.2 × laneWidth
+    medium: { width: 30 * RESOLUTION_SCALE, height: 75 * RESOLUTION_SCALE },   // 1.5 × laneWidth
+    large:  { width: 30 * RESOLUTION_SCALE, height: 90 * RESOLUTION_SCALE },   // 1.8 × laneWidth
   };
 
   /* ================================================================
    *  DEFAULTS PIPELINE — each function enriches one section of config
    * ================================================================ */
 
-  const BASE_PANE_W = 1057;
-  const BASE_PANE_H = 817;
+  const BASE_PANE_W = oddScale(1057);
+  const BASE_PANE_H = oddScale(817);
 
   function applyCanvasDefaults(cfg) {
     cfg.canvas = cfg.canvas || {};
@@ -79,7 +83,7 @@ const Diagram = (() => {
       });
       if (rows.length === 0) return;
 
-      const EDGE_CLOSE = 10;
+      const EDGE_CLOSE = 10 * RESOLUTION_SCALE;
       const isVertical = rows[0].orientation === 'vertical';
       const sw0 = rows[0].stallWidth;
       const laneGap = lot.laneGap ?? d.laneGap;
@@ -323,6 +327,39 @@ const Diagram = (() => {
     };
   }
 
+  function stopLineLaneIndices(sl, lanesPerDirection) {
+    if (Array.isArray(sl.lanes) && sl.lanes.length) {
+      const lanes = [...new Set(
+        sl.lanes
+          .map(lane => Number.parseInt(lane, 10))
+          .filter(Number.isFinite)
+          .map(lane => Math.max(0, Math.min(lanesPerDirection - 1, lane)))
+      )].sort((a, b) => a - b);
+      if (lanes.length) return lanes;
+    }
+
+    if (sl.lane != null) {
+      const lane = String(sl.lane).toLowerCase();
+      if (lane === 'left' || lane === 'inner') return [0];
+      if (lane === 'right' || lane === 'outer') return [Math.max(lanesPerDirection - 1, 0)];
+
+      const laneNum = Number.parseInt(lane, 10);
+      if (Number.isFinite(laneNum)) {
+        return [Math.max(0, Math.min(lanesPerDirection - 1, laneNum))];
+      }
+    }
+
+    return Array.from({ length: lanesPerDirection }, (_, i) => i);
+  }
+
+  function stopLineLaneRange(innerEdge, laneWidth, lanes, sideSign) {
+    const firstLane = lanes[0];
+    const lastLane = lanes[lanes.length - 1];
+    const p1 = innerEdge + sideSign * firstLane * laneWidth;
+    const p2 = innerEdge + sideSign * (lastLane + 1) * laneWidth;
+    return [Math.min(p1, p2), Math.max(p1, p2)];
+  }
+
   function applyStopLineDefaults(cfg) {
     const roadLookup = cfg._roadLookup;
 
@@ -335,31 +372,50 @@ const Diagram = (() => {
       (ix.stopLines || []).forEach(sl => {
         const approach = sl.approach;
         if (!approach) return;
-        const offset = sl.offset ?? 15;
+        const isVertApproach = (approach === 'north' || approach === 'south');
+        const r0 = roadLookup[ix.roads?.[0]];
+        const r1 = roadLookup[ix.roads?.[1]];
+        const road = isVertApproach
+          ? (r0?.orientation === 'vertical' ? r0 : r1)
+          : (r0?.orientation === 'horizontal' ? r0 : r1);
+        if (!road) return;
+
+        const lw = road.laneWidth || Roads.D.laneWidth;
+        const lpd = road.lanesPerDirection || 1;
+        const med = road.median || 0;
+        const lanes = stopLineLaneIndices(sl, lpd);
+        if (!lanes.length) return;
+
+        const offset = (sl.offset ?? (15 * RESOLUTION_SCALE))
+          + (sl.turnLane ? (sl.turnLaneOffset ?? (50 * RESOLUTION_SCALE)) : 0);
         if (approach === 'north') {
+          const [x1, x2] = stopLineLaneRange(cx - med / 2, lw, lanes, -1);
           const ly = cy - g.halfW - offset;
-          sl.x1 = sl.x1 ?? cx - g.halfH + g.vShoulder;
+          sl.x1 = sl.x1 ?? x1;
           sl.y1 = sl.y1 ?? ly;
-          sl.x2 = sl.x2 ?? cx;
+          sl.x2 = sl.x2 ?? x2;
           sl.y2 = sl.y2 ?? ly;
         } else if (approach === 'south') {
+          const [x1, x2] = stopLineLaneRange(cx + med / 2, lw, lanes, 1);
           const ly = cy + g.halfW + offset;
-          sl.x1 = sl.x1 ?? cx;
+          sl.x1 = sl.x1 ?? x1;
           sl.y1 = sl.y1 ?? ly;
-          sl.x2 = sl.x2 ?? cx + g.halfH - g.vShoulder;
+          sl.x2 = sl.x2 ?? x2;
           sl.y2 = sl.y2 ?? ly;
         } else if (approach === 'east') {
+          const [y1, y2] = stopLineLaneRange(cy - med / 2, lw, lanes, -1);
           const lx = cx + g.halfH + offset;
           sl.x1 = sl.x1 ?? lx;
-          sl.y1 = sl.y1 ?? cy - g.halfW + g.hShoulder;
+          sl.y1 = sl.y1 ?? y1;
           sl.x2 = sl.x2 ?? lx;
-          sl.y2 = sl.y2 ?? cy;
+          sl.y2 = sl.y2 ?? y2;
         } else if (approach === 'west') {
+          const [y1, y2] = stopLineLaneRange(cy + med / 2, lw, lanes, 1);
           const lx = cx - g.halfH - offset;
           sl.x1 = sl.x1 ?? lx;
-          sl.y1 = sl.y1 ?? cy;
+          sl.y1 = sl.y1 ?? y1;
           sl.x2 = sl.x2 ?? lx;
-          sl.y2 = sl.y2 ?? cy + g.halfW - g.hShoulder;
+          sl.y2 = sl.y2 ?? y2;
         }
       });
     });
@@ -386,46 +442,46 @@ const Diagram = (() => {
             ? (r0?.orientation === 'vertical' ? r0 : r1)
             : (r0?.orientation === 'horizontal' ? r0 : r1);
           if (!road) return;
-          const lw = road.laneWidth || 50;
+          const lw = road.laneWidth || Roads.D.laneWidth;
           const lpd = road.lanesPerDirection || 1;
           const med = road.median || 0;
-          const offset = sig.offset ?? 15;
+          const offset = sig.offset ?? (15 * RESOLUTION_SCALE);
           const lanes = sig.lanes ?? Array.from({ length: lpd }, (_, i) => i);
 
           const dir = isVertApproach ? 'east' : 'south';
-          sig._lights = lanes.map(lane => {
-            let lx, ly;
-            // Traffic lights sit on the far side of the junction for each approach.
-            if (approach === 'north') {
-              lx = cx - med / 2 - lw / 2 - lane * lw;
-              ly = cy + g.halfW + offset;
-            } else if (approach === 'south') {
-              lx = cx + med / 2 + lw / 2 + lane * lw;
-              ly = cy - g.halfW - offset;
-            } else if (approach === 'east') {
-              lx = cx - g.halfH - offset;
-              ly = cy - med / 2 - lw / 2 - lane * lw;
-            } else if (approach === 'west') {
-              lx = cx + g.halfH + offset;
-              ly = cy + med / 2 + lw / 2 + lane * lw;
-            }
-            return { x: lx, y: ly, direction: dir };
-          });
+          // Single light centered across all lanes for this approach direction.
+          const laneCenter = med / 2 + lpd * lw / 2;
+          let lx, ly;
+          if (approach === 'north') {
+            lx = cx - laneCenter;
+            ly = cy + g.halfW + offset;
+          } else if (approach === 'south') {
+            lx = cx + laneCenter;
+            ly = cy - g.halfW - offset;
+          } else if (approach === 'east') {
+            lx = cx - g.halfH - offset;
+            ly = cy - laneCenter;
+          } else if (approach === 'west') {
+            lx = cx + g.halfH + offset;
+            ly = cy + laneCenter;
+          }
+          sig._lights = [{ x: lx, y: ly, direction: dir }];
         } else {
           // Point signals (stopSign, etc.)
-          const gap = sig.gap ?? 15;
+          const sideGap = sig.sideGap ?? sig.gap ?? (35 * RESOLUTION_SCALE);
+          const setback = sig.setback ?? sig.gap ?? (35 * RESOLUTION_SCALE);
           if (approach === 'north') {
-            sig.x = sig.x ?? cx - g.halfH + g.vShoulder - gap;
-            sig.y = sig.y ?? cy - g.halfW - gap;
+            sig.x = sig.x ?? cx - g.halfH + g.vShoulder - sideGap;
+            sig.y = sig.y ?? cy - g.halfW - setback;
           } else if (approach === 'south') {
-            sig.x = sig.x ?? cx + g.halfH - g.vShoulder + gap;
-            sig.y = sig.y ?? cy + g.halfW + gap;
+            sig.x = sig.x ?? cx + g.halfH - g.vShoulder + sideGap;
+            sig.y = sig.y ?? cy + g.halfW + setback;
           } else if (approach === 'east') {
-            sig.x = sig.x ?? cx + g.halfH + gap;
-            sig.y = sig.y ?? cy - g.halfW + g.hShoulder - gap;
+            sig.x = sig.x ?? cx + g.halfH + setback;
+            sig.y = sig.y ?? cy - g.halfW + g.hShoulder - sideGap;
           } else if (approach === 'west') {
-            sig.x = sig.x ?? cx - g.halfH - gap;
-            sig.y = sig.y ?? cy + g.halfW - g.hShoulder + gap;
+            sig.x = sig.x ?? cx - g.halfH - setback;
+            sig.y = sig.y ?? cy + g.halfW - g.hShoulder + sideGap;
           }
         }
       });
@@ -544,7 +600,7 @@ const Diagram = (() => {
     const isVertical = row.orientation === 'vertical';
     const carH = v.height;
     const rowSplits = row._splits || [];
-    const laneGap = lot._laneGap || 100;
+    const laneGap = lot._laneGap || DEFAULTS.laneGap;
     const gapPx = splitOffset(stallIdx, rowSplits, laneGap);
 
     const medH = VEHICLE_SIZES.medium.height;
@@ -669,7 +725,11 @@ const Diagram = (() => {
           s._lights.forEach(light => {
             Signals.trafficLight(svg, light.x, light.y, { ...s, direction: light.direction });
           });
-        } else if (s.type === 'stopSign') Signals.stopSign(svg, s.x, s.y, s);
+        } else if (s.type === 'stopSign') {
+          Signals.stopSign(svg, s.x, s.y, s);
+        } else if (s.type === 'stopSign4Way') {
+          Signals.stopSign4Way(svg, s.x, s.y, s);
+        }
       });
     });
 
@@ -700,8 +760,8 @@ const Diagram = (() => {
     const compassEnabled = cfg.canvas.compass !== false;
     if (compassEnabled) {
       const comp = (typeof cfg.compass === 'object' && cfg.compass) ? cfg.compass : {};
-      const size = (comp.size ?? 30) / z;
-      const margin = (comp.margin ?? 50) / z;
+      const size = (comp.size ?? (30 * RESOLUTION_SCALE)) / z;
+      const margin = (comp.margin ?? (50 * RESOLUTION_SCALE)) / z;
       const ccx = comp.x ?? (vbW - margin);
       const ccy = comp.y ?? (vbH - margin);
       Compass.draw(svg, ccx, ccy, size);
@@ -720,8 +780,8 @@ const Diagram = (() => {
     const cellW = canvas.paneWidth / z;
     const cellH = canvas.paneHeight / z;
     const gridAttrs = {
-      stroke: '#cccccc', 'stroke-width': 1.5,
-      'stroke-dasharray': '12,6', 'stroke-opacity': 0.6,
+      stroke: '#cccccc', 'stroke-width': 1.5 * RESOLUTION_SCALE,
+      'stroke-dasharray': `${12 * RESOLUTION_SCALE},${6 * RESOLUTION_SCALE}`, 'stroke-opacity': 0.6,
     };
 
     // Vertical dividers between columns
@@ -779,7 +839,7 @@ const Diagram = (() => {
     const road = roadMap[ent.road];
     if (!road) return;
     const roadHalf = Roads.roadWidth(road.laneWidth, road.lanesPerDirection, road.median, road.shoulder) / 2;
-    const entHalf = ent.halfWidth || 50;
+    const entHalf = ent.halfWidth || (50 * RESOLUTION_SCALE);
     const ecx = ent.center[0], ecy = ent.center[1];
     const side = ent.side;
     const oppositeSide = { north: 'south', south: 'north', east: 'west', west: 'east' }[side];
@@ -787,7 +847,7 @@ const Diagram = (() => {
     const noCurb = {};
 
     let halfH, halfW, jcx, jcy;
-    const overlap = 5;
+    const overlap = 5 * RESOLUTION_SCALE;
     if (road.orientation === 'vertical') {
       const sign = (side === 'east') ? 1 : -1;
       halfH = (roadHalf + overlap) / 2;
@@ -803,7 +863,7 @@ const Diagram = (() => {
     }
 
     Intersections.junction(svg, jcx, jcy, halfH, halfW, {
-      radius: ent.radius ?? 15, arms, noCurb,
+      radius: ent.radius ?? (15 * RESOLUTION_SCALE), arms, noCurb,
       roadColor: ent.roadColor, curbColor: ent.curbColor, curbWidth: ent.curbWidth,
       shoulder: ent.shoulder ?? (road.shoulder ?? -1),
     });
@@ -883,7 +943,7 @@ const Diagram = (() => {
     Parking.surface(svg, lot._x, lot._y, lot.width, lot.height, {
       entrances: lot._entrances,
     });
-    const laneGap = lot._laneGap || 100;
+    const laneGap = lot._laneGap || DEFAULTS.laneGap;
 
     (lot.rows || []).forEach(row => {
       const opts = { stallWidth: row.stallWidth, stallDepth: row.stallDepth, direction: row.direction };
@@ -944,5 +1004,5 @@ const Diagram = (() => {
     document.body.appendChild(btn);
   }
 
-  return { DEFAULTS, VEHICLE_SIZES, BASE_PANE_W, BASE_PANE_H, render, addExportButton, applyDefaults };
+  return { RESOLUTION_SCALE, DEFAULTS, VEHICLE_SIZES, BASE_PANE_W, BASE_PANE_H, render, addExportButton, applyDefaults };
 })();

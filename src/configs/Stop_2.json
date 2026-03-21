@@ -41,19 +41,19 @@
       "signals": [
         {
           "approach": "north",
-          "type": "stopSign"
+          "type": "stopSign4Way"
         },
         {
           "approach": "south",
-          "type": "stopSign"
+          "type": "stopSign4Way"
         },
         {
           "approach": "east",
-          "type": "stopSign"
+          "type": "stopSign4Way"
         },
         {
           "approach": "west",
-          "type": "stopSign"
+          "type": "stopSign4Way"
         }
       ]
     }

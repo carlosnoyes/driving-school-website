@@ -3,6 +3,8 @@
 (function () {
   'use strict';
 
+  const PX = Diagram.RESOLUTION_SCALE;
+
   /* ── Tiny UI helpers for property rows ── */
   function row(panel, label, input) {
     const d = document.createElement('div');
@@ -97,7 +99,7 @@
               type,
               roads: [vr.id, hr.id],
               center: [cx, cy],
-              radius: 25,
+              radius: Diagram.DEFAULTS.radius,
               stopLines: [],
               signals: [],
             };
@@ -143,21 +145,21 @@
     const pos = ent ? (ent.position ?? 0) : 0;
     const cWidth = cfg.canvas.width, cHeight = cfg.canvas.height;
     const roadId = Builder.genId('road');
-    const bleed = 5;
+    const bleed = 5 * PX;
 
     let road;
     if (side === 'north') {
       road = { id: roadId, orientation: 'vertical', center: cx + pos * halfW,
-               from: -bleed, to: cy - halfH, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
+               from: -bleed, to: cy - halfH, lanesPerDirection: 1, laneWidth: Diagram.DEFAULTS.laneWidth, shoulder: Diagram.DEFAULTS.shoulder };
     } else if (side === 'south') {
       road = { id: roadId, orientation: 'vertical', center: cx + pos * halfW,
-               from: cy + halfH, to: cHeight + bleed, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
+               from: cy + halfH, to: cHeight + bleed, lanesPerDirection: 1, laneWidth: Diagram.DEFAULTS.laneWidth, shoulder: Diagram.DEFAULTS.shoulder };
     } else if (side === 'west') {
       road = { id: roadId, orientation: 'horizontal', center: cy + pos * halfH,
-               from: -bleed, to: cx - halfW, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
+               from: -bleed, to: cx - halfW, lanesPerDirection: 1, laneWidth: Diagram.DEFAULTS.laneWidth, shoulder: Diagram.DEFAULTS.shoulder };
     } else if (side === 'east') {
       road = { id: roadId, orientation: 'horizontal', center: cy + pos * halfH,
-               from: cx + halfW, to: cWidth + bleed, lanesPerDirection: 1, laneWidth: 50, shoulder: 10 };
+               from: cx + halfW, to: cWidth + bleed, lanesPerDirection: 1, laneWidth: Diagram.DEFAULTS.laneWidth, shoulder: Diagram.DEFAULTS.shoulder };
     }
     if (!road) return null;
 
@@ -223,7 +225,7 @@
     row(panel, 'Grid', checkInp(c.canvas.grid ?? false,
       v => Builder.mutate(() => c.canvas.grid = v)));
     row(panel, 'Compass', checkInp(c.canvas.compass !== false && c.compass !== false,
-      v => Builder.mutate(() => { c.canvas.compass = v; c.compass = v ? (c.compass || { size: 30 }) : false; })));
+      v => Builder.mutate(() => { c.canvas.compass = v; c.compass = v ? (c.compass || { size: 30 * PX }) : false; })));
   }
 
   function buildRoadPanel(panel, idx) {
@@ -240,7 +242,7 @@
       v => Builder.mutate(() => r.centerLineStyle = v)));
     row(panel, 'Lane Line', selInp(['dashed', 'solid', 'none'], r.laneLine || 'dashed',
       v => Builder.mutate(() => r.laneLine = v)));
-    row(panel, 'Median', checkInp(!!r.median, v => Builder.mutate(() => { r.median = v ? 12 : 0; })));
+    row(panel, 'Median', checkInp(!!r.median, v => Builder.mutate(() => { r.median = v ? 12 * PX : 0; })));
   }
 
   function buildLotPanel(panel, idx) {
@@ -380,23 +382,48 @@
       box.className = 'prop-subgroup';
       const hdr = document.createElement('div');
       hdr.className = 'prop-row-header';
-      hdr.innerHTML = '<strong>' + (sl.approach || '?') + '</strong>';
+      const laneLabel = sl.lane ? ' ' + sl.lane : '';
+      const turnLabel = sl.turnLane ? ' turn' : '';
+      hdr.innerHTML = '<strong>' + (sl.approach || '?') + laneLabel + turnLabel + '</strong>';
       const rm = document.createElement('button');
       rm.className = 'btn btn-small btn-danger'; rm.textContent = 'X';
       rm.onclick = () => Builder.mutate(() => ix.stopLines.splice(si, 1));
       hdr.appendChild(rm); box.appendChild(hdr);
+
+      row(box, 'Approach', selInp(getApproaches(ix), sl.approach || 'north',
+        v => Builder.mutate(() => sl.approach = v)));
+      row(box, 'Lane', selInp(
+        [{ value: 'all', label: 'All lanes' }, { value: 'left', label: 'Left / inner' }, { value: 'right', label: 'Right / outer' }],
+        sl.lane || 'all',
+        v => Builder.mutate(() => {
+          delete sl.lanes;
+          if (v === 'all') delete sl.lane;
+          else sl.lane = v;
+        })));
+      row(box, 'Offset', numInp(sl.offset ?? (15 * PX),
+        v => Builder.mutate(() => {
+          if (v == null || v === 15 * PX) delete sl.offset;
+          else sl.offset = v;
+        })));
+      row(box, 'Turn Lane', checkInp(sl.turnLane,
+        v => Builder.mutate(() => {
+          if (v) sl.turnLane = true;
+          else delete sl.turnLane;
+        })));
+      row(box, 'Turn Setback', numInp(sl.turnLaneOffset ?? (50 * PX),
+        v => Builder.mutate(() => {
+          if (v == null || v === 50 * PX) delete sl.turnLaneOffset;
+          else sl.turnLaneOffset = v;
+        })));
       panel.appendChild(box);
     });
 
     const addSL = document.createElement('button');
-    addSL.className = 'btn btn-small'; addSL.textContent = '+ Stop Lines';
+    addSL.className = 'btn btn-small'; addSL.textContent = '+ Stop Line';
     addSL.onclick = () => {
       Builder.mutate(() => {
         if (!ix.stopLines) ix.stopLines = [];
-        const existing = new Set(ix.stopLines.map(s => s.approach));
-        getApproaches(ix).forEach(a => {
-          if (!existing.has(a)) ix.stopLines.push({ approach: a, offset: 15 });
-        });
+        ix.stopLines.push({ approach: getApproaches(ix)[0] || 'north', offset: 15 * PX });
       });
     };
     panel.appendChild(addSL);
@@ -408,7 +435,10 @@
       box.className = 'prop-subgroup';
       const hdr = document.createElement('div');
       hdr.className = 'prop-row-header';
-      hdr.innerHTML = '<strong>' + (sig.approach || '?') + ' ' + (sig.type === 'trafficLight' ? 'light' : 'stop sign') + '</strong>';
+      const sigLabel = sig.type === 'trafficLight'
+        ? 'light'
+        : (sig.type === 'stopSign4Way' ? '4-way stop sign' : 'stop sign');
+      hdr.innerHTML = '<strong>' + (sig.approach || '?') + ' ' + sigLabel + '</strong>';
       const rm = document.createElement('button');
       rm.className = 'btn btn-small btn-danger'; rm.textContent = 'X';
       rm.onclick = () => Builder.mutate(() => ix.signals.splice(si, 1));
@@ -424,10 +454,14 @@
     const addSigRow = document.createElement('div');
     addSigRow.style.cssText = 'display:flex;gap:4px;padding:4px 0;flex-wrap:wrap';
 
-    ['trafficLight', 'stopSign'].forEach(sigType => {
+    ['trafficLight', 'stopSign', 'stopSign4Way'].forEach(sigType => {
       const btn = document.createElement('button');
       btn.className = 'btn btn-small';
-      btn.textContent = '+ ' + (sigType === 'trafficLight' ? 'Lights' : 'Stop Signs');
+      btn.textContent = '+ ' + (
+        sigType === 'trafficLight'
+          ? 'Lights'
+          : (sigType === 'stopSign4Way' ? '4-Way Stop Signs' : 'Stop Signs')
+      );
       btn.onclick = () => {
         Builder.mutate(() => {
           if (!ix.signals) ix.signals = [];
@@ -498,7 +532,7 @@
   function buildCompassPanel(panel) {
     const c = Builder.state.config;
     const comp = (typeof c.compass === 'object' && c.compass) ? c.compass : {};
-    row(panel, 'Size', numInp(comp.size ?? 30, v => Builder.mutate(() => {
+    row(panel, 'Size', numInp(comp.size ?? (30 * PX), v => Builder.mutate(() => {
       if (!c.compass || typeof c.compass !== 'object') c.compass = {};
       c.compass.size = v;
     })));

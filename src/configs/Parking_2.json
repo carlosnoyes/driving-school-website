@@ -3,7 +3,7 @@
   "parkingLots": [
     {
       "id": "lot1",
-      "xPane": 0.5,
+      "xPane": 0.5473,
       "yPane": 0.5,
       "edgeMargin": "close",
       "entrances": [

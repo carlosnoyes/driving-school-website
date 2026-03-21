@@ -1,8 +1,8 @@
 {
   "title": "4-Way All-Way Stop (Zoomed 2:1)",
   "canvas": {
-    "paneWidth": 528.5,
-    "paneHeight": 408.5
+    "paneWidth": 1057,
+    "paneHeight": 817
   },
   "roads": [
     {
@@ -35,10 +35,10 @@
         { "approach": "west" }
       ],
       "signals": [
-        { "approach": "north", "type": "stopSign" },
-        { "approach": "south", "type": "stopSign" },
-        { "approach": "east", "type": "stopSign" },
-        { "approach": "west", "type": "stopSign" }
+        { "approach": "north", "type": "stopSign4Way" },
+        { "approach": "south", "type": "stopSign4Way" },
+        { "approach": "east", "type": "stopSign4Way" },
+        { "approach": "west", "type": "stopSign4Way" }
       ]
     }
   ]

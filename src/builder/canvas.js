@@ -3,6 +3,7 @@
 (function () {
   'use strict';
 
+  const PX = Diagram.RESOLUTION_SCALE;
   const BASE_W = Diagram.BASE_PANE_W;
   const BASE_H = Diagram.BASE_PANE_H;
   const DRAG_THROTTLE_MS = 33;
@@ -84,7 +85,12 @@
     const cellH = portrait ? BASE_W : BASE_H;
     const cols = Math.round(cW / cellW);
     const rows = Math.round(cH / cellH);
-    const gridStyle = { stroke: 'rgba(255,255,255,0.4)', 'stroke-width': '2', 'stroke-dasharray': '8,4', fill: 'none' };
+    const gridStyle = {
+      stroke: 'rgba(255,255,255,0.4)',
+      'stroke-width': 2 * PX,
+      'stroke-dasharray': `${8 * PX},${4 * PX}`,
+      fill: 'none',
+    };
 
     const border = document.createElementNS(NS, 'rect');
     border.setAttribute('x', 0); border.setAttribute('y', 0);

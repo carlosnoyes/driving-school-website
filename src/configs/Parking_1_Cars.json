@@ -26,17 +26,19 @@
         {
           "type": "double",
           "orientation": "vertical",
-          "stallsPerColumn": 12,
+          "stallsPerColumn": 8,
           "splits": [
-            6
+            0,
+            4
           ]
         },
         {
           "type": "double",
           "orientation": "vertical",
-          "stallsPerColumn": 12,
+          "stallsPerColumn": 8,
           "splits": [
-            6
+            0,
+            4
           ]
         },
         {
@@ -159,7 +161,7 @@
     {
       "parkingLot": 0,
       "row": 1,
-      "stall": 10,
+      "stall": 6,
       "subRow": "right",
       "color": "blue",
       "size": "large"
@@ -183,7 +185,7 @@
     {
       "parkingLot": 0,
       "row": 2,
-      "stall": 8,
+      "stall": 5,
       "subRow": "left",
       "color": "red",
       "size": "small"
@@ -191,7 +193,7 @@
     {
       "parkingLot": 0,
       "row": 2,
-      "stall": 9,
+      "stall": 6,
       "subRow": "right",
       "color": "orange",
       "size": "medium"
@@ -199,7 +201,7 @@
     {
       "parkingLot": 0,
       "row": 2,
-      "stall": 11,
+      "stall": 7,
       "subRow": "left",
       "color": "black",
       "size": "large"

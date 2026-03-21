@@ -1,0 +1,85 @@
+{
+  "title": "4-Way Intersection with Left Turn Lanes",
+  "roads": [
+    {
+      "id": "vertical",
+      "orientation": "vertical",
+      "centerPane": 0.5,
+      "lanesPerDirection": 2,
+      "centerLineStyle": "double-yellow"
+    },
+    {
+      "id": "horizontal",
+      "orientation": "horizontal",
+      "centerPane": 0.5,
+      "lanesPerDirection": 2,
+      "centerLineStyle": "double-yellow"
+    }
+  ],
+  "intersections": [
+    {
+      "id": "main",
+      "type": "fourWay",
+      "roads": [
+        "vertical",
+        "horizontal"
+      ],
+      "stopLines": [
+        {
+          "approach": "north",
+          "lane": "left",
+          "turnLane": true
+        },
+        {
+          "approach": "north",
+          "lane": "right"
+        },
+        {
+          "approach": "south",
+          "lane": "left",
+          "turnLane": true
+        },
+        {
+          "approach": "south",
+          "lane": "right"
+        },
+        {
+          "approach": "east",
+          "lane": "left",
+          "turnLane": true
+        },
+        {
+          "approach": "east",
+          "lane": "right"
+        },
+        {
+          "approach": "west",
+          "lane": "left",
+          "turnLane": true
+        },
+        {
+          "approach": "west",
+          "lane": "right"
+        }
+      ],
+      "signals": [
+        {
+          "approach": "north",
+          "type": "trafficLight"
+        },
+        {
+          "approach": "south",
+          "type": "trafficLight"
+        },
+        {
+          "approach": "east",
+          "type": "trafficLight"
+        },
+        {
+          "approach": "west",
+          "type": "trafficLight"
+        }
+      ]
+    }
+  ]
+}

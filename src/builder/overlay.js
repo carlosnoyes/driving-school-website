@@ -3,13 +3,15 @@
 (function () {
   'use strict';
 
+  const PX = Diagram.RESOLUTION_SCALE;
+
   function hitRect(x, y, w, h, type, index) {
     const NS = 'http://www.w3.org/2000/svg';
     const r = document.createElementNS(NS, 'rect');
     r.setAttribute('x', x);
     r.setAttribute('y', y);
-    r.setAttribute('width', Math.max(w, 10));
-    r.setAttribute('height', Math.max(h, 10));
+    r.setAttribute('width', Math.max(w, 10 * PX));
+    r.setAttribute('height', Math.max(h, 10 * PX));
     r.setAttribute('fill', 'transparent');
     r.setAttribute('stroke', 'none');
     r.setAttribute('pointer-events', 'all');
@@ -26,8 +28,8 @@
     const t = ov.querySelector(`[data-type="${sel.type}"][data-index="${sel.index}"]`);
     if (t) {
       t.setAttribute('stroke', '#2196F3');
-      t.setAttribute('stroke-width', '3');
-      t.setAttribute('stroke-dasharray', '8,4');
+      t.setAttribute('stroke-width', 3 * PX);
+      t.setAttribute('stroke-dasharray', `${8 * PX},${4 * PX}`);
       t.setAttribute('fill', 'rgba(33,150,243,0.08)');
     }
   }
@@ -74,7 +76,7 @@
       if (!ix.center) return;
       const r0 = cfg.roads.find(r => r.id === (ix.roads && ix.roads[0]));
       const r1 = cfg.roads.find(r => r.id === (ix.roads && ix.roads[1]));
-      let hw = 40, hh = 40;
+      let hw = 40 * PX, hh = 40 * PX;
       if (r0 && r1) {
         const vr = r0.orientation === 'vertical' ? r0 : r1;
         const hr = r0.orientation === 'horizontal' ? r0 : r1;
@@ -88,7 +90,7 @@
     if (proc && proc.vehicles) {
       proc.vehicles.forEach((v, i) => {
         if (v._cx != null && v._cy != null) {
-          ov.appendChild(hitRect(v._cx - 20, v._cy - 20, 40, 40, 'vehicle', i));
+          ov.appendChild(hitRect(v._cx - 20 * PX, v._cy - 20 * PX, 40 * PX, 40 * PX, 'vehicle', i));
         }
       });
     }
@@ -98,9 +100,9 @@
       const z = cfg.zoom || 1;
       const vbW = cW / z, vbH = cH / z;
       const comp = cfg.compass || {};
-      const cx = comp.x ?? (vbW - (comp.margin ?? 50) / z);
-      const cy = comp.y ?? (vbH - (comp.margin ?? 50) / z);
-      ov.appendChild(hitRect(cx - 35, cy - 35, 70, 70, 'compass', 0));
+      const cx = comp.x ?? (vbW - (comp.margin ?? (50 * PX)) / z);
+      const cy = comp.y ?? (vbH - (comp.margin ?? (50 * PX)) / z);
+      ov.appendChild(hitRect(cx - 35 * PX, cy - 35 * PX, 70 * PX, 70 * PX, 'compass', 0));
     }
 
     // Grid
