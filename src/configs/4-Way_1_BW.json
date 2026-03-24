@@ -1,0 +1,5 @@
+{
+  "extends": "4-Way_1",
+  "title": "Empty 4-Way Intersection (Line Drawing)",
+  "style": "lineDraw"
+}

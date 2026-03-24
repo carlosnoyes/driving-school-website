@@ -5,7 +5,7 @@ const Builder = (() => {
   'use strict';
 
   const MAX_UNDO = 50;
-  const PX = Diagram.RESOLUTION_SCALE;
+  const PX = RESOLUTION_SCALE;
   const BASE_W = Diagram.BASE_PANE_W;
   const BASE_H = Diagram.BASE_PANE_H;
 

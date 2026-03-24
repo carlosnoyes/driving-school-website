@@ -117,14 +117,22 @@
   <select id="preset-select">
     <option value="">-- Select a diagram --</option>
     <option value="configs/4-Way_1.json">4-Way 1 — Intersection</option>
+    <option value="configs/4-Way_1_BW.json">4-Way 1 BW — Intersection (Line Drawing)</option>
+    <option value="configs/3-Way_1.json">3-Way 1 — T-Intersection</option>
+    <option value="configs/3-Way_1_BW.json">3-Way 1 BW — T-Intersection (Line Drawing)</option>
     <option value="configs/Stop_1.json">Stop 1 — 2-Way Stop</option>
     <option value="configs/Stop_2.json">Stop 2 — 4-Way Stop</option>
-    <option value="configs/Stop_3.json">Stop 3 — 4-Way Stop (Zoomed)</option>
-    <option value="configs/3-Way_1.json">3-Way 1 — T-Intersection</option>
+    <option value="configs/Stop_2_Zoomed.json">Stop 2 Zoomed — 4-Way Stop (Zoomed)</option>
+    <option value="configs/Stop_2_Zoomed_BW.json">Stop 2 Zoomed BW — 4-Way Stop (Line Drawing)</option>
+    <option value="configs/Light_1.json">Light 1 — Traffic Light</option>
+    <option value="configs/Light_2.json">Light 2 — Traffic Light</option>
+    <option value="configs/Light_3.json">Light 3 — 4-Way Traffic Lights</option>
+    <option value="configs/Turn_1.json">Turn 1 — Curved Turn</option>
+    <option value="configs/turn_lane.json">Turn Lane — 4-Way Left-Turn Lanes</option>
     <option value="configs/Parking_1.json">Parking 1 — Parking Lot</option>
+    <option value="configs/Parking_1_Cars.json">Parking 1 Cars — Lot with Vehicles</option>
     <option value="configs/Parking_2.json">Parking 2 — Parking Lot + Street</option>
     <option value="configs/Parking_2_Cars.json">Parking 2 Cars — Lot with Vehicles</option>
-    <option value="configs/turn_lane.json">Turn Lane — 4-Way Left-Turn Lanes</option>
   </select>
   <button id="btn-load-file">Load JSON File…</button>
   <input type="file" id="file-input" accept=".json" style="display:none">
@@ -161,6 +169,47 @@
   const fileInput = document.getElementById('file-input');
 
   let currentConfig = null;
+  const configCache = {};
+
+  // ── Config loader for resolving `extends` ──
+  async function loadConfig(name) {
+    const stem = name.replace(/\.json$/i, '');
+    if (configCache[stem]) return configCache[stem];
+    try {
+      const res = await fetch('configs/' + stem + '.json');
+      if (!res.ok) return null;
+      const cfg = await res.json();
+      configCache[stem] = cfg;
+      return cfg;
+    } catch (e) { return null; }
+  }
+
+  function deepMerge(base, override) {
+    const result = { ...base };
+    for (const key of Object.keys(override)) {
+      const bVal = base[key], oVal = override[key];
+      if (oVal && typeof oVal === 'object' && !Array.isArray(oVal) &&
+          bVal && typeof bVal === 'object' && !Array.isArray(bVal)) {
+        result[key] = deepMerge(bVal, oVal);
+      } else {
+        result[key] = oVal;
+      }
+    }
+    return result;
+  }
+
+  async function resolveExtendsAsync(rawCfg) {
+    if (!rawCfg.extends) return rawCfg;
+    const baseRaw = await loadConfig(rawCfg.extends);
+    if (!baseRaw) {
+      console.warn(`extends: base config "${rawCfg.extends}" not found`);
+      const { extends: _, ...rest } = rawCfg;
+      return rest;
+    }
+    const resolvedBase = await resolveExtendsAsync(baseRaw);
+    const { extends: _, ...overrides } = rawCfg;
+    return deepMerge(resolvedBase, overrides);
+  }
 
   // ── Render ──
   function renderDiagram(cfg) {
@@ -177,7 +226,8 @@
     if (!val) return;
     try {
       const res = await fetch(val);
-      const cfg = await res.json();
+      const rawCfg = await res.json();
+      const cfg = await resolveExtendsAsync(rawCfg);
       renderDiagram(cfg);
     } catch (e) {
       alert('Failed to load: ' + e.message);
@@ -190,9 +240,10 @@
     const file = fileInput.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
-        const cfg = JSON.parse(reader.result);
+        const rawCfg = JSON.parse(reader.result);
+        const cfg = await resolveExtendsAsync(rawCfg);
         renderDiagram(cfg);
         presetSelect.value = '';
       } catch (e) {

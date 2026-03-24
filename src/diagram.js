@@ -4,7 +4,56 @@
 // Depends on: primitives.js (SVG, Terrain, Roads, Intersections, Vehicles, Signals, Parking, Compass)
 
 const Diagram = (() => {
-  const RESOLUTION_SCALE = 2;
+  // RESOLUTION_SCALE is defined in primitives.js (global)
+
+  /* ── Config inheritance ── */
+
+  /**
+   * Deep-merge `override` on top of `base`.
+   * Arrays are replaced wholesale (not concatenated) so overrides can
+   * swap out e.g. the entire vehicles list.
+   */
+  function deepMerge(base, override) {
+    const result = { ...base };
+    for (const key of Object.keys(override)) {
+      const bVal = base[key];
+      const oVal = override[key];
+      if (
+        oVal && typeof oVal === 'object' && !Array.isArray(oVal) &&
+        bVal && typeof bVal === 'object' && !Array.isArray(bVal)
+      ) {
+        result[key] = deepMerge(bVal, oVal);
+      } else {
+        result[key] = oVal;
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Resolve config inheritance.
+   * If `rawCfg.extends` names a base config, load it and deep-merge.
+   * @param {object} rawCfg — the config that may contain an `extends` field
+   * @param {function} loader — `(name) => configObject|null`  synchronous loader
+   * @returns {object} resolved config (new object, inputs untouched)
+   */
+  function resolveExtends(rawCfg, loader) {
+    if (!rawCfg.extends) return rawCfg;
+    const baseName = rawCfg.extends;
+    const baseRaw = loader(baseName);
+    if (!baseRaw) {
+      console.warn(`[Diagram] extends: base config "${baseName}" not found — ignoring`);
+      const { extends: _, ...rest } = rawCfg;
+      return rest;
+    }
+    // Recursively resolve in case the base also extends something
+    const resolvedBase = resolveExtends(baseRaw, loader);
+    const { extends: _, ...overrides } = rawCfg;
+    return deepMerge(resolvedBase, overrides);
+  }
+
+  // Scale a dimension by RESOLUTION_SCALE, keeping odd values odd so
+  // pane centers land on an exact pixel (e.g. 1057 × 2 → 2113, not 2114).
   const oddScale = value => (Number.isInteger(value) && value % 2 === 1)
     ? value * RESOLUTION_SCALE - (RESOLUTION_SCALE - 1)
     : value * RESOLUTION_SCALE;
@@ -32,15 +81,23 @@ const Diagram = (() => {
    *  DEFAULTS PIPELINE — each function enriches one section of config
    * ================================================================ */
 
+  // 8.5×11 paper at landscape orientation (11:8.5 ≈ 1.294:1).
+  // canvas.orientation: "portrait" swaps these so the pane is tall (8.5:11).
   const BASE_PANE_W = oddScale(1057);
   const BASE_PANE_H = oddScale(817);
 
   function applyCanvasDefaults(cfg) {
     cfg.canvas = cfg.canvas || {};
 
-    // Pane dimensions (single pane size)
-    const pW = cfg.canvas.paneWidth || BASE_PANE_W;
-    const pH = cfg.canvas.paneHeight || BASE_PANE_H;
+    // Orientation: "portrait" swaps the default 8.5×11 pane to tall format.
+    // Explicit paneWidth/paneHeight always win over orientation.
+    const portrait = cfg.canvas.orientation === 'portrait';
+    const defaultW = portrait ? BASE_PANE_H : BASE_PANE_W;
+    const defaultH = portrait ? BASE_PANE_W : BASE_PANE_H;
+
+    // Pane dimensions (single pane size — 8.5×11 aspect ratio)
+    const pW = cfg.canvas.paneWidth || defaultW;
+    const pH = cfg.canvas.paneHeight || defaultH;
     cfg.canvas.paneWidth = pW;
     cfg.canvas.paneHeight = pH;
 
@@ -72,9 +129,13 @@ const Diagram = (() => {
     const z = cfg.canvas.zoom;
 
     (cfg.parkingLots || []).forEach(lot => {
+      // page: [col, row] offsets pane-relative coordinates to a specific pane
+      const pgCol = lot.page ? lot.page[0] : 0;
+      const pgRow = lot.page ? lot.page[1] : 0;
+
       // Resolve pane-relative positioning
-      if (lot.xPane != null && lot.x == null) lot.x = lot.xPane * pW / z;
-      if (lot.yPane != null && lot.y == null) lot.y = lot.yPane * pH / z;
+      if (lot.xPane != null && lot.x == null) lot.x = (lot.xPane + pgCol) * pW / z;
+      if (lot.yPane != null && lot.y == null) lot.y = (lot.yPane + pgRow) * pH / z;
 
       const rows = lot.rows || [];
       rows.forEach(row => {
@@ -214,17 +275,24 @@ const Diagram = (() => {
     // Roads are processed in order so later roads can reference earlier ones
     const roadLookup = {};
     (cfg.roads || []).forEach(r => {
+      // page: [col, row] offsets pane-relative coordinates to a specific pane
+      const pgCol = r.page ? r.page[0] : 0;
+      const pgRow = r.page ? r.page[1] : 0;
+
       // Resolve pane-relative positioning
       // centerPane: for vertical roads → X axis (paneWidth), for horizontal → Y axis (paneHeight)
       if (r.centerPane != null && r.center == null) {
-        r.center = r.centerPane * (r.orientation === 'vertical' ? pW : pH) / z;
+        const pageOff = r.orientation === 'vertical' ? pgCol : pgRow;
+        r.center = (r.centerPane + pageOff) * (r.orientation === 'vertical' ? pW : pH) / z;
       }
       // fromPane / toPane: for vertical roads → Y axis (paneHeight), for horizontal → X axis (paneWidth)
       if (r.fromPane != null && r.from == null) {
-        r.from = r.fromPane * (r.orientation === 'vertical' ? pH : pW) / z;
+        const pageOff = r.orientation === 'vertical' ? pgRow : pgCol;
+        r.from = (r.fromPane + pageOff) * (r.orientation === 'vertical' ? pH : pW) / z;
       }
       if (r.toPane != null && r.to == null) {
-        r.to = r.toPane * (r.orientation === 'vertical' ? pH : pW) / z;
+        const pageOff = r.orientation === 'vertical' ? pgRow : pgCol;
+        r.to = (r.toPane + pageOff) * (r.orientation === 'vertical' ? pH : pW) / z;
       }
 
       r.center = resolveRef(r.center, r.orientation, roadLookup, 'across');
@@ -304,9 +372,13 @@ const Diagram = (() => {
       v.width = v.width ?? sz.width;
       v.height = v.height ?? sz.height;
 
+      // page: [col, row] offsets pane-relative coordinates to a specific pane
+      const pgCol = v.page ? v.page[0] : 0;
+      const pgRow = v.page ? v.page[1] : 0;
+
       // Resolve pane-relative positioning for absolute-positioned vehicles
-      if (v.xPane != null && v.x == null) v.x = v.xPane * pW / z;
-      if (v.yPane != null && v.y == null) v.y = v.yPane * pH / z;
+      if (v.xPane != null && v.x == null) v.x = (v.xPane + pgCol) * pW / z;
+      if (v.yPane != null && v.y == null) v.y = (v.yPane + pgRow) * pH / z;
     });
   }
 
@@ -449,27 +521,31 @@ const Diagram = (() => {
           const lanes = sig.lanes ?? Array.from({ length: lpd }, (_, i) => i);
 
           const dir = isVertApproach ? 'east' : 'south';
-          // Single light centered across all lanes for this approach direction.
-          const laneCenter = med / 2 + lpd * lw / 2;
-          let lx, ly;
-          if (approach === 'north') {
-            lx = cx - laneCenter;
-            ly = cy + g.halfW + offset;
-          } else if (approach === 'south') {
-            lx = cx + laneCenter;
-            ly = cy - g.halfW - offset;
-          } else if (approach === 'east') {
-            lx = cx - g.halfH - offset;
-            ly = cy - laneCenter;
-          } else if (approach === 'west') {
-            lx = cx + g.halfH + offset;
-            ly = cy + laneCenter;
-          }
-          sig._lights = [{ x: lx, y: ly, direction: dir }];
+          sig._lights = lanes.map(lane => {
+            let lx, ly;
+            // Traffic lights sit on the far side of the junction for each approach.
+            if (approach === 'north') {
+              lx = cx - med / 2 - lw / 2 - lane * lw;
+              ly = cy + g.halfW + offset;
+            } else if (approach === 'south') {
+              lx = cx + med / 2 + lw / 2 + lane * lw;
+              ly = cy - g.halfW - offset;
+            } else if (approach === 'east') {
+              lx = cx - g.halfH - offset;
+              ly = cy - med / 2 - lw / 2 - lane * lw;
+            } else if (approach === 'west') {
+              lx = cx + g.halfH + offset;
+              ly = cy + med / 2 + lw / 2 + lane * lw;
+            }
+            return { x: lx, y: ly, direction: dir };
+          });
         } else {
           // Point signals (stopSign, etc.)
           const sideGap = sig.sideGap ?? sig.gap ?? (35 * RESOLUTION_SCALE);
           const setback = sig.setback ?? sig.gap ?? (35 * RESOLUTION_SCALE);
+          // Rotate sign to face approaching traffic
+          const rotMap = { north: 180, south: 0, east: -90, west: 90 };
+          sig.rotation = sig.rotation ?? rotMap[approach] ?? 0;
           if (approach === 'north') {
             sig.x = sig.x ?? cx - g.halfH + g.vShoulder - sideGap;
             sig.y = sig.y ?? cy - g.halfW - setback;
@@ -488,16 +564,10 @@ const Diagram = (() => {
     });
   }
 
-  /**
-   * Compute rendered positions for all vehicles and store as _cx, _cy, _direction.
-   * This is the single source of truth for vehicle placement — used by both
-   * the renderer and the builder overlay.
-   */
-  function applyVehiclePositions(cfg) {
+  /** Build junction geometry from intersections and road lookup. */
+  function buildJunctions(cfg) {
     const roadLookup = cfg._roadLookup;
-
-    // Build junction data (same as render uses)
-    const junctions = (cfg.intersections || []).map(ix => {
+    return (cfg.intersections || []).map(ix => {
       if (!ix.center) return null;
       const cx = ix.center[0], cy = ix.center[1];
       const r0 = roadLookup[ix.roads?.[0]];
@@ -511,6 +581,16 @@ const Diagram = (() => {
       }
       return { ...ix, cx, cy, halfH, halfW };
     }).filter(Boolean);
+  }
+
+  /**
+   * Compute rendered positions for all vehicles and store as _cx, _cy, _direction.
+   * This is the single source of truth for vehicle placement — used by both
+   * the renderer and the builder overlay.
+   */
+  function applyVehiclePositions(cfg) {
+    const roadLookup = cfg._roadLookup;
+    const junctions = cfg._junctions;
 
     // Build lot lookup (supports both ID string and array index)
     const lotById = {};
@@ -636,6 +716,70 @@ const Diagram = (() => {
   }
 
   /* ================================================================
+   *  NAMED REFERENCES — resolve @ref strings to numeric values
+   * ================================================================ */
+
+  /**
+   * Resolve the `references` section into a flat lookup of numeric values,
+   * then walk the entire config and replace any "@refName" or "@refName.x"
+   * string with the corresponding number.
+   *
+   * Reference definitions support:
+   *   { "x": 500, "y": 400 }           — absolute pixels
+   *   { "xPane": 0.3, "yPane": 0.7 }   — pane-relative (resolved to pixels)
+   *
+   * Usage in other fields:
+   *   "@refName"    — resolves to { x, y } (only useful where an [x,y] pair is expected)
+   *   "@refName.x"  — resolves to the x coordinate (number)
+   *   "@refName.y"  — resolves to the y coordinate (number)
+   */
+  function resolveReferences(cfg) {
+    const refs = cfg.references;
+    if (!refs) return;
+
+    const pW = cfg.canvas.paneWidth;
+    const pH = cfg.canvas.paneHeight;
+    const z = cfg.canvas.zoom || 1;
+
+    // Build resolved lookup: each ref becomes { x, y }
+    const resolved = {};
+    for (const [name, def] of Object.entries(refs)) {
+      const x = def.x ?? (def.xPane != null ? def.xPane * pW / z : undefined);
+      const y = def.y ?? (def.yPane != null ? def.yPane * pH / z : undefined);
+      resolved[name] = { x, y };
+    }
+
+    // Recursively walk the config and replace @ref strings
+    function walk(obj) {
+      if (Array.isArray(obj)) {
+        for (let i = 0; i < obj.length; i++) {
+          obj[i] = resolve(obj[i]);
+          if (typeof obj[i] === 'object' && obj[i] !== null) walk(obj[i]);
+        }
+      } else if (obj && typeof obj === 'object') {
+        for (const key of Object.keys(obj)) {
+          if (key === 'references') continue; // don't recurse into definitions
+          obj[key] = resolve(obj[key]);
+          if (typeof obj[key] === 'object' && obj[key] !== null) walk(obj[key]);
+        }
+      }
+    }
+
+    function resolve(val) {
+      if (typeof val !== 'string' || val[0] !== '@') return val;
+      const parts = val.slice(1).split('.');
+      const ref = resolved[parts[0]];
+      if (!ref) return val;
+      if (parts.length === 1) return ref; // return the { x, y } object
+      if (parts[1] === 'x') return ref.x;
+      if (parts[1] === 'y') return ref.y;
+      return val;
+    }
+
+    walk(cfg);
+  }
+
+  /* ================================================================
    *  APPLY DEFAULTS — orchestrates the pipeline
    * ================================================================ */
 
@@ -644,6 +788,7 @@ const Diagram = (() => {
     const cfg = JSON.parse(JSON.stringify(raw));
 
     applyCanvasDefaults(cfg);
+    resolveReferences(cfg);
     applyParkingDefaults(cfg, d);
     applyRoadDefaults(cfg, d);
     applyIntersectionDefaults(cfg, d);
@@ -651,6 +796,7 @@ const Diagram = (() => {
     applyVehicleDefaults(cfg);
     applyStopLineDefaults(cfg);
     applySignalDefaults(cfg);
+    cfg._junctions = buildJunctions(cfg);
     applyVehiclePositions(cfg);
 
     return cfg;
@@ -661,6 +807,10 @@ const Diagram = (() => {
    * ================================================================ */
 
   function render(container, rawCfg) {
+    // Apply style theme before rendering
+    DiagramStyle.reset();
+    if (rawCfg.style) DiagramStyle.set(rawCfg.style);
+
     const cfg = applyDefaults(rawCfg);
     const W = cfg.canvas.width;
     const H = cfg.canvas.height;
@@ -671,22 +821,7 @@ const Diagram = (() => {
     svg.setAttribute('viewBox', `0 0 ${vbW} ${vbH}`);
 
     const roadMap = cfg._roadLookup;
-
-    // Build junction data for road clipping and intersection rendering
-    const junctions = (cfg.intersections || []).map(ix => {
-      if (!ix.center) return null;
-      const cx = ix.center[0], cy = ix.center[1];
-      const r0 = roadMap[ix.roads?.[0]];
-      const r1 = roadMap[ix.roads?.[1]];
-      let halfH = 0, halfW = 0;
-      if (r0 && r1) {
-        const vRoad = r0.orientation === 'vertical' ? r0 : r1;
-        const hRoad = r0.orientation === 'horizontal' ? r0 : r1;
-        halfH = Roads.roadWidth(vRoad.laneWidth, vRoad.lanesPerDirection, vRoad.median, vRoad.shoulder) / 2;
-        halfW = Roads.roadWidth(hRoad.laneWidth, hRoad.lanesPerDirection, hRoad.median, hRoad.shoulder) / 2;
-      }
-      return { ...ix, cx, cy, halfH, halfW };
-    }).filter(Boolean);
+    const junctions = cfg._junctions;
 
     // 1. Background
     Terrain.fillArea(svg, 0, 0, W, H);
@@ -712,26 +847,28 @@ const Diagram = (() => {
     (cfg.intersections || []).forEach(ix => {
       (ix.stopLines || []).forEach(sl => {
         SVG.line(svg, sl.x1, sl.y1, sl.x2, sl.y2, {
-          stroke: sl.color || '#fff',
+          stroke: sl.color || DiagramStyle.get().stopLineColor,
           'stroke-width': sl.width || 3,
         });
       });
     });
 
-    // 8. Signals
+    // 8. Signals (intersection-attached and standalone)
+    function renderSignal(s) {
+      if (s.type === 'trafficLight' && s._lights) {
+        s._lights.forEach(light => {
+          Signals.trafficLight(svg, light.x, light.y, { ...s, direction: light.direction });
+        });
+      } else if (s.type === 'stopSign') {
+        Signals.stopSign(svg, s.x, s.y, s);
+      } else if (s.type === 'stopSign4Way') {
+        Signals.stopSign4Way(svg, s.x, s.y, s);
+      }
+    }
     (cfg.intersections || []).forEach(ix => {
-      (ix.signals || []).forEach(s => {
-        if (s.type === 'trafficLight' && s._lights) {
-          s._lights.forEach(light => {
-            Signals.trafficLight(svg, light.x, light.y, { ...s, direction: light.direction });
-          });
-        } else if (s.type === 'stopSign') {
-          Signals.stopSign(svg, s.x, s.y, s);
-        } else if (s.type === 'stopSign4Way') {
-          Signals.stopSign4Way(svg, s.x, s.y, s);
-        }
-      });
+      (ix.signals || []).forEach(renderSignal);
     });
+    (cfg.signals || []).forEach(renderSignal);
 
     // 9. Vehicles — use pre-computed positions
     (cfg.vehicles || []).forEach(v => {
@@ -1004,5 +1141,5 @@ const Diagram = (() => {
     document.body.appendChild(btn);
   }
 
-  return { RESOLUTION_SCALE, DEFAULTS, VEHICLE_SIZES, BASE_PANE_W, BASE_PANE_H, render, addExportButton, applyDefaults };
+  return { DEFAULTS, VEHICLE_SIZES, BASE_PANE_W, BASE_PANE_H, render, addExportButton, applyDefaults, resolveExtends };
 })();

@@ -3,7 +3,7 @@
 (function () {
   'use strict';
 
-  const PX = Diagram.RESOLUTION_SCALE;
+  const PX = RESOLUTION_SCALE;
   const SNAP_DISTANCE = 30 * PX;
 
   /** Handle overlay clicks: placement modes or select. */
@@ -72,7 +72,9 @@
     cfg.roads.forEach(road => {
       const lw = road.laneWidth || Roads.D.laneWidth;
       const lpd = road.lanesPerDirection || 1;
-      const cH = cfg.canvas.height, cW = cfg.canvas.width;
+      const proc = state.processed;
+      const cH = (proc && proc.canvas.height) || cfg.canvas.height || Builder.BASE_H;
+      const cW = (proc && proc.canvas.width) || cfg.canvas.width || Builder.BASE_W;
 
       for (const side of ['left', 'right']) {
         for (let lane = 0; lane < lpd; lane++) {

@@ -3,7 +3,7 @@
 (function () {
   'use strict';
 
-  const PX = Diagram.RESOLUTION_SCALE;
+  const PX = RESOLUTION_SCALE;
 
   let drag = null;
   let lastRender = 0;
@@ -91,7 +91,9 @@
       } else if (v.road) {
         const road = cfg.roads.find(r => r.id === v.road);
         if (road) {
-          const cH = cfg.canvas.height, cW = cfg.canvas.width;
+          const proc = Builder.state.processed;
+          const cH = (proc && proc.canvas.height) || cfg.canvas.height || Builder.BASE_H;
+          const cW = (proc && proc.canvas.width) || cfg.canvas.width || Builder.BASE_W;
           if (road.orientation === 'vertical') {
             const from = road.from ?? 0, to = road.to ?? cH;
             v.t = Math.max(0, Math.min(1, (pt.y - from) / (to - from)));

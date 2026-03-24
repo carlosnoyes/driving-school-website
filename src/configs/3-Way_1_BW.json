@@ -1,0 +1,5 @@
+{
+  "extends": "3-Way_1",
+  "title": "T-Intersection (Line Drawing)",
+  "style": "lineDraw"
+}

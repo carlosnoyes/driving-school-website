@@ -3,7 +3,7 @@
 (function () {
   'use strict';
 
-  const PX = Diagram.RESOLUTION_SCALE;
+  const PX = RESOLUTION_SCALE;
   const BASE_W = Diagram.BASE_PANE_W;
   const BASE_H = Diagram.BASE_PANE_H;
   const DRAG_THROTTLE_MS = 33;
@@ -16,8 +16,16 @@
     const ov = document.getElementById('overlay');
     if (!wrapper || !svg) return;
 
-    const natW = state.config.canvas.width;
-    const natH = state.config.canvas.height;
+    // Use processed dimensions (from applyDefaults) when available,
+    // falling back to deriving them the same way applyDefaults does.
+    const proc = state.processed;
+    const c = state.config.canvas || {};
+    const pW = c.paneWidth || BASE_W;
+    const pH = c.paneHeight || BASE_H;
+    const cols = c.columns || 1;
+    const rows = c.rows || 1;
+    const natW = (proc && proc.canvas.width) || c.width || pW * cols;
+    const natH = (proc && proc.canvas.height) || c.height || pH * rows;
     const wrapW = wrapper.clientWidth;
     const wrapH = wrapper.clientHeight;
 
@@ -75,6 +83,7 @@
     } catch (e) { /* ignore during drag */ }
     const svg = container.querySelector('svg');
     if (svg) { svg.style.pointerEvents = 'none'; Builder.buildOverlay(svg); }
+    fitCanvas();
   }
 
   /** Build grid lines on the overlay. */

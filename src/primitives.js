@@ -4,6 +4,77 @@
 const RESOLUTION_SCALE = 2;
 const AREA_SCALE = RESOLUTION_SCALE * RESOLUTION_SCALE;
 
+/* ───────────────── DIAGRAM STYLE (theme switching) ──────────────── */
+
+const DiagramStyle = (() => {
+  const normal = {
+    // Terrain
+    grass: '#4a8c3f', grassAlt: '#3d7a34',
+    bush: '#2d6b28', bushLight: '#3a8a32',
+    tree: '#1f5c1a', trunk: '#6b4226',
+    plant: '#5a9a50', plantLight: '#7ab870',
+    terrainDecorations: true,
+    // Roads
+    roadColor: '#333333', lineColor: '#fff', centerColor: '#ddcc00',
+    // Intersections
+    curbColor: '#ccc',
+    // Vehicles
+    vehicleDefault: '#cccccc', vehicleStroke: '#555',
+    // Signals
+    signalBg: '#333', signalStroke: '#222', signalLightStroke: '#111',
+    stopSignFill: '#cc0000', stopSignStroke: '#880000', stopSignText: 'white',
+    // Parking
+    parkingSurface: '#555555', parkingBorder: '#cccccc', parkingLine: '#ffffff',
+    // Compass
+    compassColor: '#333',
+    // Stop lines
+    stopLineColor: '#fff',
+    // Road edges (drawn when no shoulders)
+    roadEdgeLines: false,
+  };
+
+  const lineDraw = {
+    // Terrain — white canvas, no decorations
+    grass: '#ffffff', grassAlt: '#ffffff',
+    bush: '#ffffff', bushLight: '#ffffff',
+    tree: '#ffffff', trunk: '#ffffff',
+    plant: '#ffffff', plantLight: '#ffffff',
+    terrainDecorations: false,
+    // Roads — white fill, black lines
+    roadColor: '#ffffff', lineColor: '#000', centerColor: '#000',
+    // Intersections
+    curbColor: '#000',
+    // Vehicles — white with black outline
+    vehicleDefault: '#ffffff', vehicleStroke: '#000',
+    // Signals — black and white
+    signalBg: '#ffffff', signalStroke: '#000', signalLightStroke: '#000',
+    stopSignFill: '#ffffff', stopSignStroke: '#000', stopSignText: '#000',
+    // Parking — white with black lines
+    parkingSurface: '#ffffff', parkingBorder: '#000', parkingLine: '#000',
+    // Compass
+    compassColor: '#000',
+    // Stop lines
+    stopLineColor: '#000',
+    // Road edges
+    roadEdgeLines: true,
+  };
+
+  const styles = { normal, lineDraw };
+  let current = { ...normal };
+
+  function set(name) {
+    const s = styles[name] || styles.normal;
+    Object.assign(current, s);
+  }
+
+  function get() { return current; }
+
+  // Reset to normal at start of each render
+  function reset() { Object.assign(current, normal); }
+
+  return { set, get, reset };
+})();
+
 /* ───────────────────────────── SVG CORE ───────────────────────────── */
 
 const SVG = (() => {
@@ -51,14 +122,18 @@ const SVG = (() => {
 
 const Terrain = (() => {
   const C = {
-    grass: '#4a8c3f', grassAlt: '#3d7a34',
-    bush: '#2d6b28', bushLight: '#3a8a32',
-    tree: '#1f5c1a', trunk: '#6b4226',
+    get grass()     { return DiagramStyle.get().grass; },
+    get grassAlt()  { return DiagramStyle.get().grassAlt; },
+    get bush()      { return DiagramStyle.get().bush; },
+    get bushLight() { return DiagramStyle.get().bushLight; },
+    get tree()      { return DiagramStyle.get().tree; },
+    get trunk()     { return DiagramStyle.get().trunk; },
   };
 
   function grass(p, x, y, w, h) {
     const g = SVG.group(p);
     SVG.rect(g, x, y, w, h, { fill: C.grass });
+    if (!DiagramStyle.get().terrainDecorations) return g;
     const rng = SVG.seedRandom(x * 7 + y * 13);
     const n = Math.floor((w * h) / (4000 * AREA_SCALE));
     for (let i = 0; i < n; i++) {
@@ -93,17 +168,19 @@ const Terrain = (() => {
   }
 
   function plant(p, cx, cy) {
+    const s = DiagramStyle.get();
     const g = SVG.group(p);
-    SVG.circle(g, cx, cy, 3 * RESOLUTION_SCALE, { fill: '#5a9a50' });
-    SVG.circle(g, cx, cy, 1.5 * RESOLUTION_SCALE, { fill: '#7ab870' });
+    SVG.circle(g, cx, cy, 3 * RESOLUTION_SCALE, { fill: s.plant });
+    SVG.circle(g, cx, cy, 1.5 * RESOLUTION_SCALE, { fill: s.plantLight });
     return g;
   }
 
   function fillArea(p, x, y, w, h, opts = {}) {
     if (w <= 0 || h <= 0) return SVG.group(p);
-    const margin = opts.margin ?? (15 * RESOLUTION_SCALE);
     const g = SVG.group(p);
     grass(g, x, y, w, h);
+    if (!DiagramStyle.get().terrainDecorations) return g;
+    const margin = opts.margin ?? (15 * RESOLUTION_SCALE);
     const rng = SVG.seedRandom(x * 31 + y * 17 + w * 3);
     const ix = x + margin, iy = y + margin, iw = w - margin * 2, ih = h - margin * 2;
     if (iw <= 0 || ih <= 0) return g;
@@ -124,15 +201,17 @@ const Terrain = (() => {
 
 const Roads = (() => {
   const D = {
-    laneWidth: 50 * RESOLUTION_SCALE, roadColor: '#333333',
-    lineColor: '#fff', centerColor: '#ddcc00',
+    laneWidth: 50 * RESOLUTION_SCALE,
+    get roadColor()  { return DiagramStyle.get().roadColor; },
+    get lineColor()  { return DiagramStyle.get().lineColor; },
+    get centerColor(){ return DiagramStyle.get().centerColor; },
     centerWidth: 2 * RESOLUTION_SCALE, laneLineWidth: 1.5 * RESOLUTION_SCALE,
     dashLen: 20 * RESOLUTION_SCALE, dashGap: 15 * RESOLUTION_SCALE,
   };
 
   function dashedLine(p, x1, y1, x2, y2, o = {}) {
     return SVG.line(p, x1, y1, x2, y2, {
-      stroke: o.color || '#fff', 'stroke-width': o.width || D.laneLineWidth,
+      stroke: o.color || D.lineColor, 'stroke-width': o.width || D.laneLineWidth,
       'stroke-dasharray': `${o.dashLen || D.dashLen},${o.dashGap || D.dashGap}`, fill: 'none',
     });
   }
@@ -171,7 +250,19 @@ const Roads = (() => {
    * Coordinates depend on orientation, so caller passes the right rect args.
    */
   function medianRect(g, x, y, w, h, color) {
-    SVG.rect(g, x, y, w, h, { fill: color });
+    // The median width/height includes the yellow edge lines.
+    // Inset the gray strip and draw yellow lines at the outer edges.
+    const lineInset = 5 * RESOLUTION_SCALE;
+    const isVertical = h > w; // tall & narrow = vertical road median
+    if (isVertical) {
+      SVG.rect(g, x + lineInset, y, w - lineInset * 2, h, { fill: color });
+      solidLine(g, x, y, x, y + h, { color: D.centerColor, width: D.centerWidth });
+      solidLine(g, x + w, y, x + w, y + h, { color: D.centerColor, width: D.centerWidth });
+    } else {
+      SVG.rect(g, x, y + lineInset, w, h - lineInset * 2, { fill: color });
+      solidLine(g, x, y, x + w, y, { color: D.centerColor, width: D.centerWidth });
+      solidLine(g, x, y + h, x + w, y + h, { color: D.centerColor, width: D.centerWidth });
+    }
   }
 
   /**
@@ -188,22 +279,22 @@ const Roads = (() => {
       if (shoulderWidth > 0) {
         SVG.rect(g, e1 - shoulderWidth, Math.min(start, end), shoulderWidth, Math.abs(end - start), { fill: roadColor });
       }
-      solidLine(g, e1, start, e1, end, { color: '#fff', width: D.laneLineWidth });
+      solidLine(g, e1, start, e1, end, { color: D.lineColor, width: D.laneLineWidth });
       // Right shoulder: from e2 to (e2 + shoulderWidth)
       if (shoulderWidth > 0) {
         SVG.rect(g, e2, Math.min(start, end), shoulderWidth, Math.abs(end - start), { fill: roadColor });
       }
-      solidLine(g, e2, start, e2, end, { color: '#fff', width: D.laneLineWidth });
+      solidLine(g, e2, start, e2, end, { color: D.lineColor, width: D.laneLineWidth });
     } else {
       // e1 = top edge y, e2 = bottom edge y
       if (shoulderWidth > 0) {
         SVG.rect(g, Math.min(start, end), e1 - shoulderWidth, Math.abs(end - start), shoulderWidth, { fill: roadColor });
       }
-      solidLine(g, start, e1, end, e1, { color: '#fff', width: D.laneLineWidth });
+      solidLine(g, start, e1, end, e1, { color: D.lineColor, width: D.laneLineWidth });
       if (shoulderWidth > 0) {
         SVG.rect(g, Math.min(start, end), e2, Math.abs(end - start), shoulderWidth, { fill: roadColor });
       }
-      solidLine(g, start, e2, end, e2, { color: '#fff', width: D.laneLineWidth });
+      solidLine(g, start, e2, end, e2, { color: D.lineColor, width: D.laneLineWidth });
     }
   }
 
@@ -238,6 +329,12 @@ const Roads = (() => {
     // Road surface (full width including shoulders)
     SVG.rect(g, left, yMin, totalW, yLen, { fill: rc });
 
+    // Road edge lines (visible when road blends with background, e.g. lineDraw style)
+    if (sh < 0 && DiagramStyle.get().roadEdgeLines) {
+      solidLine(g, left, y1, left, y2, { color: D.lineColor, width: D.laneLineWidth });
+      solidLine(g, left + totalW, y1, left + totalW, y2, { color: D.lineColor, width: D.laneLineWidth });
+    }
+
     // Shoulder positions
     const lanesLeftEdge = left + (sh > 0 ? sh : 0);
     const lanesRightEdge = left + totalW - (sh > 0 ? sh : 0);
@@ -262,8 +359,8 @@ const Roads = (() => {
         const lx = lanesLeftEdge + i * lw;
         const rx = cx + (med + center) / 2 + i * lw;
         if (ll === 'solid') {
-          solidLine(g, lx, y1, lx, y2, { color: '#fff', width: D.laneLineWidth });
-          solidLine(g, rx, y1, rx, y2, { color: '#fff', width: D.laneLineWidth });
+          solidLine(g, lx, y1, lx, y2, { color: D.lineColor, width: D.laneLineWidth });
+          solidLine(g, rx, y1, rx, y2, { color: D.lineColor, width: D.laneLineWidth });
         } else {
           dashedLine(g, lx, y1, lx, y2);
           dashedLine(g, rx, y1, rx, y2);
@@ -294,6 +391,12 @@ const Roads = (() => {
 
     SVG.rect(g, xMin, top, xLen, totalW, { fill: rc });
 
+    // Road edge lines for lineDraw style
+    if (sh < 0 && DiagramStyle.get().roadEdgeLines) {
+      solidLine(g, x1, top, x2, top, { color: D.lineColor, width: D.laneLineWidth });
+      solidLine(g, x1, top + totalW, x2, top + totalW, { color: D.lineColor, width: D.laneLineWidth });
+    }
+
     const lanesTopEdge = top + (sh > 0 ? sh : 0);
     const lanesBottomEdge = top + totalW - (sh > 0 ? sh : 0);
 
@@ -314,8 +417,8 @@ const Roads = (() => {
         const ty = lanesTopEdge + i * lw;
         const by = cy + (med + center) / 2 + i * lw;
         if (ll === 'solid') {
-          solidLine(g, x1, ty, x2, ty, { color: '#fff', width: D.laneLineWidth });
-          solidLine(g, x1, by, x2, by, { color: '#fff', width: D.laneLineWidth });
+          solidLine(g, x1, ty, x2, ty, { color: D.lineColor, width: D.laneLineWidth });
+          solidLine(g, x1, by, x2, by, { color: D.lineColor, width: D.laneLineWidth });
         } else {
           dashedLine(g, x1, ty, x2, ty);
           dashedLine(g, x1, by, x2, by);
@@ -415,18 +518,24 @@ const Intersections = (() => {
       `M ${acx} ${acy} L ${o1.x} ${o1.y} A ${roadW} ${roadW} 0 0 ${sweep} ${o2.x} ${o2.y} Z`,
       { fill: rc, stroke: 'none' });
 
+    // Edge lines for lineDraw style (outer arc outline)
+    if (sh < 0 && DiagramStyle.get().roadEdgeLines) {
+      SVG.path(g, arc(roadW, o1, o2),
+        { fill: 'none', stroke: Roads.D.lineColor, 'stroke-width': Roads.D.laneLineWidth });
+    }
+
     // 2. Shoulder lines
     if (sh >= 0) {
       if (shW > 0) {
         // Inner shoulder line (near arc center)
         const si1 = vPt(shW), si2 = hPt(shW);
         SVG.path(g, arc(shW, si1, si2),
-          { fill: 'none', stroke: '#fff', 'stroke-width': Roads.D.laneLineWidth });
+          { fill: 'none', stroke: Roads.D.lineColor, 'stroke-width': Roads.D.laneLineWidth });
       }
       // Outer shoulder line
       const so1 = vPt(roadW - shW), so2 = hPt(roadW - shW);
       SVG.path(g, arc(roadW - shW, so1, so2),
-        { fill: 'none', stroke: '#fff', 'stroke-width': Roads.D.laneLineWidth });
+        { fill: 'none', stroke: Roads.D.lineColor, 'stroke-width': Roads.D.laneLineWidth });
     }
 
     // 3. Center line at radius = hw (middle of road band)
@@ -455,11 +564,11 @@ const Intersections = (() => {
       for (let i = 1; i < lpd; i++) {
         const rIn = shW + i * lw;
         SVG.path(g, arc(rIn, vPt(rIn), hPt(rIn)),
-          { fill: 'none', stroke: '#fff', 'stroke-width': Roads.D.laneLineWidth,
+          { fill: 'none', stroke: Roads.D.lineColor, 'stroke-width': Roads.D.laneLineWidth,
             'stroke-dasharray': Roads.D.dashLen + ',' + Roads.D.dashGap });
         const rOut = hw + 2 * RESOLUTION_SCALE + i * lw;
         SVG.path(g, arc(rOut, vPt(rOut), hPt(rOut)),
-          { fill: 'none', stroke: '#fff', 'stroke-width': Roads.D.laneLineWidth,
+          { fill: 'none', stroke: Roads.D.lineColor, 'stroke-width': Roads.D.laneLineWidth,
             'stroke-dasharray': Roads.D.dashLen + ',' + Roads.D.dashGap });
       }
     }
@@ -479,7 +588,7 @@ const Intersections = (() => {
     const r = opts.radius ?? (20 * RESOLUTION_SCALE);
     const rc = opts.roadColor || Roads.D.roadColor;
     const arms = opts.arms || { north: true, south: true, east: true, west: true };
-    const curbColor = opts.curbColor || '#ccc';
+    const curbColor = opts.curbColor || DiagramStyle.get().curbColor;
     const curbWidth = opts.curbWidth || (3 * RESOLUTION_SCALE);
     const sh = opts.shoulder || 0;
     const noCurb = opts.noCurb || {};
@@ -548,10 +657,10 @@ const Intersections = (() => {
       // Arc center = corner point. Radius = distance from corner to the white line = sh
       // (since the white line is sh pixels inward from the outer edge which IS the corner)
       const slw = Roads.D.laneLineWidth;
-      _shoulderArc(g, left, top, -1, -1, arms.north, arms.west, r, sh, '#fff', slw);
-      _shoulderArc(g, right, top, 1, -1, arms.north, arms.east, r, sh, '#fff', slw);
-      _shoulderArc(g, right, bot, 1, 1, arms.south, arms.east, r, sh, '#fff', slw);
-      _shoulderArc(g, left, bot, -1, 1, arms.south, arms.west, r, sh, '#fff', slw);
+      _shoulderArc(g, left, top, -1, -1, arms.north, arms.west, r, sh, Roads.D.lineColor, slw);
+      _shoulderArc(g, right, top, 1, -1, arms.north, arms.east, r, sh, Roads.D.lineColor, slw);
+      _shoulderArc(g, right, bot, 1, 1, arms.south, arms.east, r, sh, Roads.D.lineColor, slw);
+      _shoulderArc(g, left, bot, -1, 1, arms.south, arms.west, r, sh, Roads.D.lineColor, slw);
     }
 
     // Straight curb lines on blocked sides only (skip if noCurb)
@@ -610,7 +719,8 @@ const Vehicles = (() => {
   };
 
   function car(p, cx, cy, opts = {}) {
-    const color = COLORS[opts.color] || opts.color || COLORS.default;
+    const s = DiagramStyle.get();
+    const color = opts.color ? (COLORS[opts.color] || opts.color) : s.vehicleDefault;
     const dir = opts.direction || 'north';
     const cw = opts.width || (24 * RESOLUTION_SCALE), ch = opts.height || (40 * RESOLUTION_SCALE);
     const g = SVG.group(p);
@@ -618,7 +728,7 @@ const Vehicles = (() => {
     const h = (dir === 'north' || dir === 'south') ? ch : cw;
     SVG.rect(g, cx - w / 2, cy - h / 2, w, h, {
       fill: color,
-      stroke: '#555',
+      stroke: s.vehicleStroke,
       'stroke-width': 1.5 * RESOLUTION_SCALE,
       rx: 5 * RESOLUTION_SCALE,
       ry: 5 * RESOLUTION_SCALE,
@@ -647,9 +757,10 @@ const Signals = (() => {
     else if (dir === 'north') rot = 270;
     g.setAttribute('transform', `rotate(${rot}, ${x}, ${y})`);
 
+    const st = DiagramStyle.get();
     SVG.rect(g, x - w / 2, y - h / 2, w, h, {
-      fill: '#333',
-      stroke: '#222',
+      fill: st.signalBg,
+      stroke: st.signalStroke,
       'stroke-width': 1 * sc,
       rx: 3 * sc,
     });
@@ -658,7 +769,11 @@ const Signals = (() => {
     const on  = { red: '#ff2222', yellow: '#ffcc00', green: '#22ff44' };
     ['red', 'yellow', 'green'].forEach((c, i) => {
       const ly = y - h / 2 + pad + r + i * (r * 2 + pad);
-      SVG.circle(g, x, ly, r, { fill: c === active ? on[c] : off[c], stroke: '#111', 'stroke-width': 0.5 * sc });
+      let fill;
+      if (active === 'all') fill = on[c];
+      else if (active === 'off') fill = off[c];
+      else fill = c === active ? on[c] : off[c];
+      SVG.circle(g, x, ly, r, { fill, stroke: st.signalLightStroke, 'stroke-width': 0.5 * sc });
     });
 
     return g;
@@ -676,12 +791,13 @@ const Signals = (() => {
       const a = Math.PI / 8 + i * Math.PI / 4;
       pts.push(`${x + size * Math.cos(a)},${y + size * Math.sin(a)}`);
     }
-    SVG.append(g, 'polygon', { points: pts.join(' '), fill: '#cc0000', stroke: '#880000', 'stroke-width': 1 * sc });
+    const st = DiagramStyle.get();
+    SVG.append(g, 'polygon', { points: pts.join(' '), fill: st.stopSignFill, stroke: st.stopSignStroke, 'stroke-width': 1 * sc });
 
     const lines = opts.lines || [{ text: 'STOP', dy: 3 * sc, size: 7 * sc }];
     lines.forEach(line => {
       SVG.text(g, x, y + line.dy, line.text, {
-        fill: 'white', 'font-size': line.size, 'font-weight': 'bold',
+        fill: st.stopSignText, 'font-size': line.size, 'font-weight': 'bold',
         'text-anchor': 'middle', 'font-family': 'Arial, sans-serif',
       });
     });
@@ -695,13 +811,20 @@ const Signals = (() => {
 
   function stopSign4Way(p, x, y, opts = {}) {
     const sc = opts.scale ?? (1.5 * RESOLUTION_SCALE);
-    return drawStopSign(p, x, y, {
-      ...opts,
-      lines: [
-        { text: 'STOP', dy: 0, size: 6.5 * sc },
-        { text: '4-WAY', dy: 6.5 * sc, size: 3.6 * sc },
-      ],
+    const g = drawStopSign(p, x, y, opts);
+    // Separate "4-WAY" plaque below the octagon
+    const size = 14 * sc;
+    const pw = 14 * sc, ph = 6 * sc;
+    const py = y + size + 3 * sc;
+    const st2 = DiagramStyle.get();
+    SVG.rect(g, x - pw / 2, py - ph / 2, pw, ph, {
+      fill: st2.stopSignFill, stroke: st2.stopSignStroke, 'stroke-width': 1 * sc, rx: 1 * sc,
     });
+    SVG.text(g, x, py + 2 * sc, '4-WAY', {
+      fill: st2.stopSignText, 'font-size': 4.5 * sc, 'font-weight': 'bold',
+      'text-anchor': 'middle', 'font-family': 'Arial, sans-serif',
+    });
+    return g;
   }
 
   return { trafficLight, stopSign, stopSign4Way };
@@ -712,8 +835,11 @@ const Signals = (() => {
 
 const Parking = (() => {
   const D = {
-    lineColor: '#ffffff', lineWidth: 1.5 * RESOLUTION_SCALE,
-    surfaceColor: '#555555', borderColor: '#cccccc', borderWidth: 2 * RESOLUTION_SCALE,
+    get lineColor()    { return DiagramStyle.get().parkingLine; },
+    lineWidth: 1.5 * RESOLUTION_SCALE,
+    get surfaceColor() { return DiagramStyle.get().parkingSurface; },
+    get borderColor()  { return DiagramStyle.get().parkingBorder; },
+    borderWidth: 2 * RESOLUTION_SCALE,
   };
 
   function stall(p, x, y, opts = {}) {
@@ -807,21 +933,22 @@ const Compass = (() => {
   function draw(p, cx, cy, size = 30 * RESOLUTION_SCALE) {
     const g = SVG.group(p);
     const s = size;
+    const cc = DiagramStyle.get().compassColor;
     // Cross arrows
     // Vertical arrow (N-S)
-    SVG.line(g, cx, cy - s, cx, cy + s, { stroke: '#333', 'stroke-width': 1.5 * RESOLUTION_SCALE });
+    SVG.line(g, cx, cy - s, cx, cy + s, { stroke: cc, 'stroke-width': 1.5 * RESOLUTION_SCALE });
     // Horizontal arrow (E-W)
-    SVG.line(g, cx - s, cy, cx + s, cy, { stroke: '#333', 'stroke-width': 1.5 * RESOLUTION_SCALE });
+    SVG.line(g, cx - s, cy, cx + s, cy, { stroke: cc, 'stroke-width': 1.5 * RESOLUTION_SCALE });
     // Arrowheads
     const ah = 6 * RESOLUTION_SCALE;
     // North
-    SVG.path(g, `M ${cx} ${cy - s} L ${cx - ah} ${cy - s + ah} L ${cx + ah} ${cy - s + ah} Z`, { fill: '#333' });
+    SVG.path(g, `M ${cx} ${cy - s} L ${cx - ah} ${cy - s + ah} L ${cx + ah} ${cy - s + ah} Z`, { fill: cc });
     // South
-    SVG.path(g, `M ${cx} ${cy + s} L ${cx - ah} ${cy + s - ah} L ${cx + ah} ${cy + s - ah} Z`, { fill: '#333' });
+    SVG.path(g, `M ${cx} ${cy + s} L ${cx - ah} ${cy + s - ah} L ${cx + ah} ${cy + s - ah} Z`, { fill: cc });
     // East
-    SVG.path(g, `M ${cx + s} ${cy} L ${cx + s - ah} ${cy - ah} L ${cx + s - ah} ${cy + ah} Z`, { fill: '#333' });
+    SVG.path(g, `M ${cx + s} ${cy} L ${cx + s - ah} ${cy - ah} L ${cx + s - ah} ${cy + ah} Z`, { fill: cc });
     // West
-    SVG.path(g, `M ${cx - s} ${cy} L ${cx - s + ah} ${cy - ah} L ${cx - s + ah} ${cy + ah} Z`, { fill: '#333' });
+    SVG.path(g, `M ${cx - s} ${cy} L ${cx - s + ah} ${cy - ah} L ${cx - s + ah} ${cy + ah} Z`, { fill: cc });
 
     return g;
   }

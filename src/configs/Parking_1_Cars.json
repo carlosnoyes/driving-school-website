@@ -84,42 +84,42 @@
       "size": "large"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 0,
       "stall": 1,
       "color": "red",
       "size": "large"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 0,
       "stall": 4,
       "color": "blue",
       "size": "medium"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 0,
       "stall": 7,
       "color": "white",
       "size": "small"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 0,
       "stall": 10,
       "color": "green",
       "size": "large"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 0,
       "stall": 13,
       "color": "yellow",
       "size": "medium"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 1,
       "stall": 0,
       "subRow": "left",
@@ -127,7 +127,7 @@
       "size": "large"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 1,
       "stall": 3,
       "subRow": "left",
@@ -135,7 +135,7 @@
       "size": "medium"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 1,
       "stall": 2,
       "subRow": "right",
@@ -143,7 +143,7 @@
       "size": "small"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 1,
       "stall": 5,
       "subRow": "right",
@@ -151,7 +151,7 @@
       "size": "large"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 1,
       "stall": 7,
       "subRow": "left",
@@ -159,7 +159,7 @@
       "size": "medium"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 1,
       "stall": 6,
       "subRow": "right",
@@ -167,7 +167,7 @@
       "size": "large"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 2,
       "stall": 1,
       "subRow": "left",
@@ -175,7 +175,7 @@
       "size": "medium"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 2,
       "stall": 4,
       "subRow": "right",
@@ -183,7 +183,7 @@
       "size": "large"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 2,
       "stall": 5,
       "subRow": "left",
@@ -191,7 +191,7 @@
       "size": "small"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 2,
       "stall": 6,
       "subRow": "right",
@@ -199,7 +199,7 @@
       "size": "medium"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 2,
       "stall": 7,
       "subRow": "left",
@@ -207,35 +207,35 @@
       "size": "large"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 3,
       "stall": 2,
       "color": "gray",
       "size": "large"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 3,
       "stall": 5,
       "color": "white",
       "size": "small"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 3,
       "stall": 8,
       "color": "blue",
       "size": "medium"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 3,
       "stall": 11,
       "color": "red",
       "size": "large"
     },
     {
-      "parkingLot": 0,
+      "parkingLot": "lot1",
       "row": 3,
       "stall": 13,
       "color": "green",

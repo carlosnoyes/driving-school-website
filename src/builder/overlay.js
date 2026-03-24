@@ -3,7 +3,7 @@
 (function () {
   'use strict';
 
-  const PX = Diagram.RESOLUTION_SCALE;
+  const PX = RESOLUTION_SCALE;
 
   function hitRect(x, y, w, h, type, index) {
     const NS = 'http://www.w3.org/2000/svg';
@@ -45,8 +45,10 @@
 
     const cfg  = state.config;
     const proc = state.processed;
-    const cW   = cfg.canvas.width;
-    const cH   = cfg.canvas.height;
+    // Use processed dimensions — raw config may not have width/height
+    // after column/row changes delete them for applyDefaults to recompute.
+    const cW   = (proc && proc.canvas.width) || cfg.canvas.width || Builder.BASE_W;
+    const cH   = (proc && proc.canvas.height) || cfg.canvas.height || Builder.BASE_H;
 
     // Roads
     cfg.roads.forEach((r, i) => {

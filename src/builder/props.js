@@ -3,7 +3,7 @@
 (function () {
   'use strict';
 
-  const PX = Diagram.RESOLUTION_SCALE;
+  const PX = RESOLUTION_SCALE;
 
   /* ── Tiny UI helpers for property rows ── */
   function row(panel, label, input) {

@@ -41,19 +41,23 @@
       "signals": [
         {
           "approach": "north",
-          "type": "trafficLight"
+          "type": "trafficLight",
+          "activeLight": "green"
         },
         {
           "approach": "south",
-          "type": "trafficLight"
+          "type": "trafficLight",
+          "activeLight": "green"
         },
         {
           "approach": "east",
-          "type": "trafficLight"
+          "type": "trafficLight",
+          "activeLight": "red"
         },
         {
           "approach": "west",
-          "type": "trafficLight"
+          "type": "trafficLight",
+          "activeLight": "red"
         }
       ]
     }

@@ -1,0 +1,5 @@
+{
+  "extends": "Stop_1",
+  "title": "4-Way Intersection with 2 Stop Signs (Portrait)",
+  "canvas": { "orientation": "portrait" }
+}
